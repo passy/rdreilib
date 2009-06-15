@@ -58,6 +58,10 @@ class SuperForm(Form):
                         'fields': []}
             for fname in options.get('fields', []):
                 if fname in self:
+                    # Make required fields more obvious to the view
+                    required = len(filter(lambda x: x.func_name == '_required', self[fname].validators)) == 1
+                    setattr(self[fname], 'required', required)
+
                     _context['fields'].append(self[fname])
                 else:
                     log.warn("Fieldsets field definition for %s references "\
