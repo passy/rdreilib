@@ -14,6 +14,8 @@ from werkzeug.contrib.cache import SimpleCache
 from glashammer.bundles.sqlalchdb import session
 from glashammer.utils import get_app
 
+from eauth import setup_eauth
+
 def setup_repozewhat(app, user_class, group_class, permission_class, **repozekw):
     """
     Add repoze.what support to your Glashammer application.

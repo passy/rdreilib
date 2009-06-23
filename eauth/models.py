@@ -1,13 +1,14 @@
 import sqlalchemy as db
 
-from database import ModelBase
+from ..database import ModelBase
 from sqlalchemy import orm
 from glashammer.utils.local import get_app
 from glashammer.bundles.sqlalchdb import metadata
 
-from p2lib import int_to_p2
+from ..p2lib import int_to_p2
 
 from hashlib import sha1
+import datetime, types
 
 
 class User(ModelBase):
@@ -16,8 +17,12 @@ class User(ModelBase):
     """
     __tablename__ = 'user'
     user_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    user_name = db.Column(db.Unicode(16), unique=True)
+    user_name = db.Column(db.Unicode(50), unique=True)
     _password = db.Column('password', db.Unicode(40))
+
+    is_staff = db.Column(db.Boolean, default=False)
+    is_active = db.Column(db.Boolean, default=True)
+    is_superuser = db.Column(db.Boolean, default=False)
 
     @property
     def user_p2id(self):
@@ -68,11 +73,63 @@ class User(ModelBase):
         """
         return self.password == self.__encrypt_password(password)
 
+    def is_authenticated(self):
+        return True
+
+    def has_perm(self, perm):
+        "Returns True if the user has the specified permission."
+
+        # If perm is a string, find the object.
+        if type(perm) in types.StringTypes:
+            _perm = Permission.query.filter_by(permission_name=perm).first()
+            if not _perm:
+                raise TypeError("Unknown permission %r!" % perm)
+            perm = _perm
+
+        if not self.is_active:
+            return False
+
+        if self.is_superuser:
+            return True
+
+        # Iter through all the groups providing this permission.
+        for group in perm.groups:
+            if self in group.users:
+                return True
+
+        return False
+
+    def has_perms(self, perm_list):
+        "Returns True if the user has each of the specified permissions."
+        for perm in perm_list:
+            if not self.has_perm:
+                return False
+        return True
+
     def __unicode__(self):
         return u"<User[%d]('%s')>" % (self.user_id or "unsaved", self.user_name)
 
     def __repr__(self):
         return self.__unicode__()
+
+class AnonymousUser(object):
+    "Returned if not authenticated"
+
+    user_id = 0
+    user_name = None
+    password = None
+    user_p2id = 0
+
+    is_staff = False
+    is_active = False
+    is_superuser = False
+
+    validate_password = lambda self, password: False
+    is_authenticated = lambda self: False
+
+    def __repr__(self):
+        return u"<AnonymousUser()>"
+
 
 class Profile(ModelBase):
     """A one-to-one related table storing user related information.
@@ -86,8 +143,18 @@ class Profile(ModelBase):
     # wrong.
     security_answer = db.Column(db.Unicode(120))
 
+    first_name = db.Column(db.Unicode(30), nullable=True)
+    last_name = db.Column(db.Unicode(30), nullable=True)
+    # Does a unique constraint work, if it's nullable?
+    email = db.Column(db.Unicode(50), nullable=True)
+    last_login = db.Column(db.Date)
+
     user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False, primary_key=True)
     user = orm.relation(User, backref='profile', uselist=False)
+
+    def __init__(self):
+        if not self.last_login:
+            self.last_login = datetime.datetime.now()
 
 # This is the association table for the many-to-many relationship between
 # groups and permissions.
@@ -118,6 +185,9 @@ class Group(ModelBase):
     group_name = db.Column(db.Unicode(16), unique=True)
     users = orm.relation('User', secondary=user_group_table, backref='groups')
 
+    def __init__(self, name):
+        self.group_name = name
+
     def __unicode__(self):
         return "<Group[%d]('%s')>" % (self.group_id, self.group_name)
 
@@ -129,9 +199,12 @@ class Permission(ModelBase):
     __tablename__ = 'permission'
 
     permission_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    permission_name = db.Column(db.Unicode(16), unique=True)
+    permission_name = db.Column(db.Unicode(60), unique=True)
     groups = orm.relation(Group, secondary=group_permission_table,
                           backref='permissions')
+
+    def __init__(self, name):
+        self.permission_name = name
 
     def __unicode__(self):
         return "<Group[%d]('%s')>" % (self.permission_id, self.permission_name)
