@@ -24,7 +24,7 @@ import logging
 log = logging.getLogger("rdreilib.ajaxtoken")
 
 def _generate_token():
-    return sha1("%s#%s" % (time(), get_app().cfg['auth.secure_salt'])).hexdigest()
+    return sha1("%s#%s" % (time(), get_app().cfg['sessions/secret'])).hexdigest()
 
 def set_ajax_token(func):
     """Generates a new ajax token and pins it at the session."""

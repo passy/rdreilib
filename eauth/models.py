@@ -52,7 +52,7 @@ class User(ModelBase):
 
         hashed_password = sha1()
         hashed_password.update(password_8bit)
-        hashed_password.update(app.cfg['auth.secure_salt'])
+        hashed_password.update(app.cfg['sessions/secret'])
         hashed_password = hashed_password.hexdigest()
 
         # make sure the hased password is an UTF-8 object at the end of the
