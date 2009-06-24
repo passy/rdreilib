@@ -126,6 +126,8 @@ class AnonymousUser(object):
 
     validate_password = lambda self, password: False
     is_authenticated = lambda self: False
+    has_perm = lambda self: False
+    has_perms = lambda self: False
 
     def __repr__(self):
         return u"<AnonymousUser()>"

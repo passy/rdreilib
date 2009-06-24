@@ -21,15 +21,17 @@ def require_login(func):
             raise Unauthorized("Login required!")
     return _deco
 
-def require_perm(func, perms):
-    @wraps(func)
-    def _deco(self, req, *args, **kwargs):
-        if type(perms) is list:
-            if req.user.has_perms(perms):
-                return func(self, req, *args, **kwargs)
-        else:
-            if requ.user.has_perm(perms):
-                return func(self, req, *args, **kwargs)
-        raise Forbidden("Permission(s) %r required!" % perms)
-    return _deco
+def require_perm(perms):
+    def _outer(func):
+        @wraps(func)
+        def _deco(self, req, *args, **kwargs):
+            if type(perms) is list:
+                if req.user.has_perms(perms):
+                    return func(self, req, *args, **kwargs)
+            else:
+                if requ.user.has_perm(perms):
+                    return func(self, req, *args, **kwargs)
+            raise Forbidden("Permission(s) %r required!" % perms)
+        return _deco
+    return _outer
 
