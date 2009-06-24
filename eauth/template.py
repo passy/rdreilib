@@ -14,14 +14,16 @@ from glashammer.utils import get_request
 class TemplateUser(object):
     """Allows restricted access to user attributes via template."""
 
-    ALLOWED_ATTR = ('is_authenticated', 'has_perm', 'has_perms',
-                    'is_active', 'is_active', 'is_superuser')
-    
+    ALLOWED_METHODS = ('is_authenticated', 'has_perm', 'has_perms')
+    ALLOWED_ATTRS = ('is_active', 'is_active', 'is_superuser')
+
     def __init__(self):
         self.user = get_request().user
-
-        # Reference allowed attributes/methods from user to this
-        # wrapper class.
-        for attr in self.ALLOWED_ATTR:
-            setattr(self, attr, getattr(self.user, attr))
+    
+    def __getattr__(self, name):
+        if name in self.ALLOWED_METHODS or \
+           name in self.ALLOWED_ATTRS:
+            return getattr(self.user, name)
+        else:
+            object.__getattr__(self, name)
 
