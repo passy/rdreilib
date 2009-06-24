@@ -63,8 +63,8 @@ def _redirect_unauthorized(resp):
     if resp.status_code == 401:
         # We need the request for later redirecting.
         req = get_request()
-        resp.headers['Location'] = url_for("auth/login", **{REDIRECT_FIELD_NAME: req.path,
-                                                            '_external': True})
+        resp.headers['Location'] = url_for("auth/login", **{REDIRECT_FIELD_NAME:
+                                                            req.url})
         resp.status_code = 302
 
 def setup_eauth(app):
