@@ -13,13 +13,14 @@
 from models import User, Group, Permission, AnonymousUser
 from ..database import session
 from sqlalchemy import and_, or_
-from glashammer.utils import url_for
+from sqlalchemy.orm.exc import NoResultFound
+from glashammer.utils import url_for, get_request
 from werkzeug.utils import redirect
 
 import datetime
 
 SESSION_KEY = '_auth_user_id'
-REDIRECT_FIELD_NAME = 'next'
+REDIRECT_FIELD_NAME = 'came_from'
 
 def authenticate(login, password):
     """If the given login (username or email) and password
@@ -27,7 +28,10 @@ def authenticate(login, password):
 
     #user = User.query.filter(or_(User.user_name==login,
     #                             User.email==login))
-    user = User.query.filter(User.user_name==login).one()
+    try:
+        user = User.query.filter(User.user_name==login).one()
+    except NoResultFound:
+        return None
     if user.validate_password(password):
         return user
 
@@ -57,7 +61,10 @@ def _tag_request(req):
 
 def _redirect_unauthorized(resp):
     if resp.status_code == 401:
-        resp.headers['Location'] = url_for("auth/login")
+        # We need the request for later redirecting.
+        req = get_request()
+        resp.headers['Location'] = url_for("auth/login", **{REDIRECT_FIELD_NAME: req.path,
+                                                            '_external': True})
         resp.status_code = 302
 
 def setup_eauth(app):

@@ -29,7 +29,7 @@ def require_perm(perms):
                 if req.user.has_perms(perms):
                     return func(self, req, *args, **kwargs)
             else:
-                if requ.user.has_perm(perms):
+                if req.user.has_perm(perms):
                     return func(self, req, *args, **kwargs)
             raise Forbidden("Permission(s) %r required!" % perms)
         return _deco

@@ -209,7 +209,7 @@ class Permission(ModelBase):
         self.permission_name = name
 
     def __unicode__(self):
-        return "<Group[%d]('%s')>" % (self.permission_id, self.permission_name)
+        return "<Permission[%d]('%s')>" % (self.permission_id, self.permission_name)
 
     def __repr__(self):
         return self.__unicode__()
