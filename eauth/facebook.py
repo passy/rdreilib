@@ -68,6 +68,7 @@ class FacebookMiddleware(object):
             if not _recursive:
                 # Make sure we don't loop because of some weird
                 # database failures.
+                log.debug("New user created. Logging in now.")
                 return self._login_or_create(req, user.user_name, True)
 
     def _get_facebook_signature(self, values_dict, is_cookie_check=False):
