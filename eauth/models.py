@@ -62,6 +62,14 @@ class User(ModelBase):
 
         return hashed_password
 
+    def set_unusable_password(self):
+        """Sets a password, that will never be ususable for a
+        real login. This is usable if the account is hacked and
+        a new password should be set by the user or - more common -
+        if you are using a different authentication backend like facebook
+        connect."""
+        self._password = u"#disabled#"
+
     def validate_password(self, password):
         """Check the password against existing credentials.
         this method _MUST_ return a boolean.
@@ -107,7 +115,7 @@ class User(ModelBase):
         return True
 
     def __unicode__(self):
-        return u"<User[%d]('%s')>" % (self.user_id or "unsaved", self.user_name)
+        return u"<User[%s]('%s')>" % (self.user_id or "unsaved", self.user_name)
 
     def __repr__(self):
         return self.__unicode__()
@@ -139,17 +147,23 @@ class Profile(ModelBase):
     __tablename__ = 'profile'
 
     #profile_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
-    security_question = db.Column(db.Unicode(120))
+    # I recently made the questions and answers nullable, because it does
+    # not make sense, if we have a facebook connect user.
+    # We could introduce a seperate FBConnectProfile and dynamically
+    # map the currect profile. But not for now.
+    security_question = db.Column(db.Unicode(120), nullable=True)
     # We store the answer in plain text. This is the usual way, because an
     # administrator could validate the answer by hand if something's going
     # wrong.
-    security_answer = db.Column(db.Unicode(120))
+    security_answer = db.Column(db.Unicode(120), nullable=True)
 
     first_name = db.Column(db.Unicode(30), nullable=True)
     last_name = db.Column(db.Unicode(30), nullable=True)
     # Does a unique constraint work, if it's nullable?
     email = db.Column(db.Unicode(50), nullable=True)
     last_login = db.Column(db.Date)
+
+    uses_facebook_connect = db.Column(db.Boolean, default=False)
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False, primary_key=True)
     user = orm.relation(User, backref='profile', uselist=False)

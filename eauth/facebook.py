@@ -9,6 +9,11 @@
  :license: GPL v3, see doc/LICENSE for more details.
  """
 
+from .models import User, Profile
+from ..database import session
+from . import login
+from glashammer.utils import emit_event
+
 import hashlib
 import logging
 
@@ -30,9 +35,40 @@ class FacebookMiddleware(object):
                signature_hash = self._get_facebook_signature(req.cookies, True)
                if signature_hash == req.cookies[self.api_key]:
                    log.debug("Hash key is valid! Assuming the user is valid!")
+                   self._login_or_create(req, req.cookies["%s_%s" %
+                                         (self.api_key, "user")])
+
                else:
                    log.info("Hash invalid! Expected: %s, got: %s!" %
                             (signature_hash, req.cookies[self.api_key]))
+
+    def _login_or_create(self, req, username, _recursive=False):
+        """Trying to find the user based on the ID we get from the
+        cookie and set the session cookie or, if the user is not yet
+        in the database, create a new one."""
+        USERNAME_SCHEMA = u"FBConnect_%s"
+        user = User.query.filter(User.user_name==USERNAME_SCHEMA %
+                                 username).first()
+        if user:
+            log.debug("Logging in user via facebook connect: %r" % user)
+            emit_event("fconnect-login", user)
+            login(req, user)
+        else:
+            # Creating a new user
+            user = User()
+            user.user_name = USERNAME_SCHEMA % username
+            user.set_unusable_password()
+            profile = Profile()
+            profile.user = user
+            profile.uses_facebook_connect = True
+            #TODO: Get first and last name from FB!
+            emit_event("fconnect-create-user", user, profile)
+            session.add_all([user, profile])
+            session.commit()
+            if not _recursive:
+                # Make sure we don't loop because of some weird
+                # database failures.
+                return self._login_or_create(req, user.user_name, True)
 
     def _get_facebook_signature(self, values_dict, is_cookie_check=False):
         signature_keys = []
@@ -42,13 +78,14 @@ class FacebookMiddleware(object):
             elif (is_cookie_check is False):
                 signature_keys.append(key)
 
-            if (is_cookie_check):
-                signature_string = ''.join(['%s=%s' % (x.replace(self.api_key + '_',''), values_dict[x]) for x in signature_keys])
-            else:
-                signature_string = ''.join(['%s=%s' % (x, values_dict[x]) for x in signature_keys])
-                signature_string = signature_string + self.secret_key
+        if (is_cookie_check):
+            signature_string = ''.join(['%s=%s' % (x.replace(self.api_key + '_',''), values_dict[x]) for x in signature_keys])
+        else:
+            signature_string = ''.join(['%s=%s' % (x, values_dict[x]) for x in signature_keys])
+        signature_string = signature_string + self.secret_key
 
-            return hashlib.md5(signature_string).hexdigest()
+        log.debug("Generated string: %r" % signature_string)
+        return hashlib.md5(signature_string).hexdigest()
 
 
 def setup_facebook_connect(app):
