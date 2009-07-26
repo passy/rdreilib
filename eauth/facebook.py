@@ -69,7 +69,9 @@ class FacebookMiddleware(object):
                 # Make sure we don't loop because of some weird
                 # database failures.
                 log.debug("New user created. Logging in now.")
-                return self._login_or_create(req, user.user_name, True)
+                # Don't use user.user_name here, because it includes the
+                # FBConnect_ prefix!
+                return self._login_or_create(req, username, True)
 
     def _get_facebook_signature(self, values_dict, is_cookie_check=False):
         signature_keys = []

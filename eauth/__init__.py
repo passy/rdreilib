@@ -42,7 +42,7 @@ def login(req, user):
     session.commit()
 
     req.session[SESSION_KEY] = user.user_id
-    req.set_user = user
+    req.set_user(user)
 
 def logout(req):
     "Removes the session values."

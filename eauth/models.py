@@ -166,7 +166,7 @@ class Profile(ModelBase):
     uses_facebook_connect = db.Column(db.Boolean, default=False)
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.user_id'), nullable=False, primary_key=True)
-    user = orm.relation(User, backref='profile', uselist=False)
+    user = orm.relation(User, backref=orm.backref('profile', uselist=False))
 
     def __init__(self):
         if not self.last_login:

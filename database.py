@@ -10,23 +10,15 @@
 """
 
 from p2lib import p2_to_int
-from glashammer.bundles.sqlalchdb import metadata, session
+from glashammer.bundles.sqlalchdb import metadata, session, Query as _Query
+from glashammer.bundles.sqlalchdb import MetaModel, ModelBaseMeta
 from sqlalchemy.ext.declarative import declarative_base
+from werkzeug.exceptions import NotFound
 from sqlalchemy import orm
 
-class Query(orm.Query):
-    """Default query class."""
+class Query(_Query):
+    """Enhanced default query class."""
 
-    def first(self, raise_if_missing=False):
-        """Return the first result of this `Query` or None if the result
-        doesn't contain any row.  If `raise_if_missing` is set to `True`
-        a `NotFound` exception is raised if no row is found.
-        """
-        rv = orm.Query.first(self)
-        if rv is None and raise_if_missing:
-            raise NotFound()
-        return rv
-    
     def getp2(self, p2id):
         """Returns the row where the pk has the given p2id."""
         try:
@@ -34,10 +26,10 @@ class Query(orm.Query):
         except ValueError:
             return None
 
-from werkzeug.exceptions import NotFound
 
-class _ModelBase(object):
+class _ModelBase(MetaModel):
     query = session.query_property(Query)
 
-ModelBase = declarative_base(metadata=metadata, cls=_ModelBase)
+ModelBase = declarative_base(metadata=metadata, cls=_ModelBase,
+                             metaclass=ModelBaseMeta)
 
