@@ -16,10 +16,23 @@ from glashammer.utils import emit_event
 
 import hashlib
 import logging
+import datetime
 
 log = logging.getLogger('eauth.facebook')
 
 class FacebookMiddleware(object):
+    # Wrapping map for profile attributes
+    PROFILE_ATTRIBUTE_WRAPPER = {
+        'first_name': 'first_name',
+        'last_name': 'last_name',
+        'proxied_email': 'email',
+        'pic_square_with_logo': 'fb_pic_url',
+        'website': 'fb_website',
+        'username': 'fb_username',
+        'profile_url': 'fb_profile'
+    }
+
+
     def __init__(self, api_key, secret_key):
         self.api_key = api_key
         self.secret_key = secret_key
@@ -42,6 +55,33 @@ class FacebookMiddleware(object):
                    log.info("Hash invalid! Expected: %s, got: %s!" %
                             (signature_hash, req.cookies[self.api_key]))
 
+    def check_profile(self, req, user):
+        """Checks the user profile and fetches missing data from facebook."""
+        if user.profile.first_name is None:
+            self.update_profile(req, user)
+
+    def update_profile(self, req, user):
+        """Updates the profile data from facebook."""
+        # First name is mandatory on facebook, so if this is missing, the
+        # data has not been fetched yet.
+        #! This can raise an exception!
+        user_data = req.facebook.users.getInfo(req.facebook.uid,
+                                               self.PROFILE_ATTRIBUTE_WRAPPER.keys())
+
+        assert (len(user_data) == 1), "Invalid response from facebook while "\
+            "fetching user data!"
+
+        profile = user.profile
+        for (key, value) in user_data[0].iteritems():
+            if key in self.PROFILE_ATTRIBUTE_WRAPPER:
+                setattr(profile, self.PROFILE_ATTRIBUTE_WRAPPER[key], value)
+
+        # Update the time stamp
+        profile.fb_last_update = datetime.datetime.now()
+
+        session.add(profile)
+        session.commit()
+
     def _login_or_create(self, req, username, _recursive=False):
         """Trying to find the user based on the ID we get from the
         cookie and set the session cookie or, if the user is not yet
@@ -51,8 +91,9 @@ class FacebookMiddleware(object):
                                  username).first()
         if user:
             log.debug("Logging in user via facebook connect: %r" % user)
-            emit_event("fconnect-login", user)
+            emit_event("fconnect-login-start", req, user)
             login(req, user)
+            emit_event("fconnect-login-end", req, user)
         else:
             # Creating a new user
             user = User()
@@ -91,7 +132,9 @@ class FacebookMiddleware(object):
         return hashlib.md5(signature_string).hexdigest()
 
 
-def setup_facebook_connect(app):
+def setup_facebook_connect(app, fetch_profile=False):
+    log.info('Saving Facebook profile information is not compatible with their '
+             'Storable Data Guidelines.')
     app.add_config_var('facebook/api_key', str, '')
     app.add_config_var('facebook/secret_key', str, '')
 
@@ -99,4 +142,9 @@ def setup_facebook_connect(app):
                             app.cfg['facebook/secret_key'])
 
     app.connect_event('request-start', FM.check_cookie)
+
+    if fetch_profile:
+        # If this extra option is set, the profile is checked for existence and
+        # missing data is fetched via FQL
+        app.connect_event('fconnect-login-end', FM.check_profile)
 

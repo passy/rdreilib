@@ -161,6 +161,14 @@ class Profile(ModelBase):
     last_name = db.Column(db.Unicode(30), nullable=True)
     # Does a unique constraint work, if it's nullable?
     email = db.Column(db.Unicode(50), nullable=True)
+
+    # Facebook related items, so all nullable
+    fb_username = db.Column(db.Unicode(30), nullable=True)
+    fb_profile = db.Column(db.Unicode(160), nullable=True)
+    fb_website = db.Column(db.Unicode(160), nullable=True)
+    fb_pic_url = db.Column(db.Unicode(200), nullable=True)
+    fb_last_update = db.Column(db.Date, default="1900-01-01 00:00:00")
+
     last_login = db.Column(db.Date)
 
     uses_facebook_connect = db.Column(db.Boolean, default=False)
@@ -171,6 +179,7 @@ class Profile(ModelBase):
     def __init__(self):
         if not self.last_login:
             self.last_login = datetime.datetime.now()
+            self.fb_last_update = datetime.datetime.fromtimestamp(0)
 
 # This is the association table for the many-to-many relationship between
 # groups and permissions.
