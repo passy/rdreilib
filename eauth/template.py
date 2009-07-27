@@ -15,7 +15,7 @@ class TemplateUser(object):
     """Allows restricted access to user attributes via template."""
 
     ALLOWED_METHODS = ('is_authenticated', 'has_perm', 'has_perms')
-    ALLOWED_ATTRS = ('is_active', 'is_active', 'is_superuser')
+    ALLOWED_ATTRS = ('is_active', 'is_active', 'is_superuser', 'profile')
 
     def __init__(self):
         self.user = get_request().user

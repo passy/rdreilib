@@ -62,6 +62,8 @@ class FacebookMiddleware(object):
 
     def update_profile(self, req, user):
         """Updates the profile data from facebook."""
+        if not req.facebook:
+            return
         # First name is mandatory on facebook, so if this is missing, the
         # data has not been fetched yet.
         #! This can raise an exception!
