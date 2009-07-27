@@ -13,7 +13,13 @@ from eauth.models import AnonymousUser
 
 from glashammer.utils.wrappers import Request as GHRequest
 from glashammer.utils.wrappers import Response as GHResponse
+from glashammer.utils.local import get_app
 from glashammer.bundles.sessions import get_session
+from werkzeug.utils import cached_property
+
+import logging
+
+log = logging.getLogger('rdreilib.wrappers')
 
 class Request(GHRequest):
 
@@ -41,6 +47,27 @@ class Request(GHRequest):
             return self._user
         else:
             return AnonymousUser()
+
+    @cached_property
+    def facebook(self):
+        """Get a facebook object, if pyfacebook is present, the user is logged
+        in and is a facebook connect user. Otherwise this is None."""
+        try:
+            from facebook import Facebook
+        except ImportError:
+            log.warning("PyFacebook is not installed!")
+        else:
+            if self.user and self.user.profile.uses_facebook_connect:
+                # This implies, that the correct cookies must be set. We don't
+                # double check for that.
+                api_key = get_app().cfg['facebook/api_key']
+                secret_key = get_app().cfg['facebook/secret_key']
+                facebook = Facebook(api_key, secret_key)
+                # Settings the cookie values
+                # It's so cool to have no private attributes. (;
+                facebook.uid = self.cookies["%s_user" % api_key]
+                facebook.session_key = self.cookies["%s_session_key" % api_key]
+                return facebook
 
     def set_user(self, user):
         self._user = user
