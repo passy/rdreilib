@@ -143,9 +143,9 @@ def model_form(model, base_class=SuperForm, include_pk=False, exclude=None):
     """
     Create a WTForm for a given SQLAlchemy declarative-style model class::
 
-        from wtforms.ext.sqlalchemy.orm import model_form
-        from myproject.myapp.models import User
-        UserForm = model_form(User)
+        >>> from wtforms.ext.sqlalchemy.orm import model_form
+        >>> from myproject.myapp.models import User
+        >>> UserForm = model_form(User)
 
     The form can be made to extend your own form by passing the ``base_class``
     parameter. Primary key fields are not included unless you specify 
