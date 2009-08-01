@@ -11,7 +11,7 @@
 
 from glashammer.utils.wrappers import render_response
 from glashammer.bundles.sessions import get_session
-from rdrei.rdreilib.eauth.template import TemplateUser
+from eauth.template import TemplateUser
 
 class BaseController(object):
     """Base class for controllers"""
