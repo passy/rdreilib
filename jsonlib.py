@@ -52,7 +52,9 @@ def json_view(f, encoder=None):
             res = f(*args, **kw)
         except Exception, err:
             log.error("View error: %s" % traceback.format_exc())
-            return JsonResponse({'error': repr(err)})
+            resp = JsonResponse({'error': repr(err)})
+            resp.status_code = 500
+            return resp
         if callable(res):
             return res
         else:

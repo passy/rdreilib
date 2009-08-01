@@ -2,6 +2,7 @@ import sqlalchemy as db
 
 from ..database import ModelBase
 from sqlalchemy import orm
+from werkzeug.utils import cached_property
 from glashammer.utils.local import get_app
 from glashammer.bundles.sqlalchdb import metadata
 
@@ -180,6 +181,10 @@ class Profile(ModelBase):
         if not self.last_login:
             self.last_login = datetime.datetime.now()
             self.fb_last_update = datetime.datetime.fromtimestamp(0)
+
+    @cached_property
+    def fullname(self):
+        return u"%s %s" % (self.first_name, self.last_name)
 
 # This is the association table for the many-to-many relationship between
 # groups and permissions.
