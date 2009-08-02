@@ -51,3 +51,8 @@ def ajax_load_sidebar_modules(req, smodule):
 
     return {'modules': module_results}
 
+def force_method(req, method):
+    """Checks for request method and raises a `BadRequest` on mismatch."""
+    if req.method != method:
+        raise BadRequest("Invalid request method!")
+
