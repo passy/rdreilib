@@ -139,7 +139,7 @@ class SidebarModule(object):
         "Implement this method to add some dynamic data to self.meta"
         pass
     
-    def render(self, path, dictionary):        
+    def render(self, path, dictionary):
         return render_template(path, **dictionary)
         
     def to_dict(self):
