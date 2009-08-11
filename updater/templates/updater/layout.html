@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/2009/xhtml5">
+  <head>
+    <title>{{ page_title|default("Updater") }}</title>
+    <meta charset="utf-8" />
+
+    <link rel="stylesheet" href="{{ url_for('shared/updater', filename='css/main.css') }}" type="text/css" />
+  </head>
+  <body id="index" class="home">
+
+    <header id="banner" class="body">
+    <h1><a href="{{ url_for('updater/index') }}">rDREI Updater<br />
+        <strong>Bringing your application to the next level.</strong></a></h1>
+    <nav><ul>
+      <li class="active"><a href="{{ url_for('updater/index') }}">home</a></li>
+
+      <li><a href="#">updates</a></li>
+      <li><a href="#">log</a></li>
+      <li><a href="#">bugs</a></li>
+    </ul></nav>
+    </header><!-- /#banner -->
+
+    <section id="content" class="body">
+      {% block content %}{% endblock content %}
+    </section><!-- /#content -->
+
+    <footer id="contentinfo" class="body">
+    <address id="about" class="vcard body">
+      <span class="primary">
+        <strong><a href="http://www.rdrei.net/" class="fn url">rDREI.net solutions</a></strong>
+        <span class="role">&copy; 2009</span>
+      </span><!-- /.primary -->
+
+      <img src="{{ url_for('shared/updater', filename='images/logo_small.png') }}" alt="rDrei Updater" class="photo" />
+
+      <span class="bio">rDREI Updater is a rDREI.net application, providing an
+        easy interface for WSGI application to automatic, web-based updates.</span>
+
+
+    </address><!-- /#about -->
+
+    <p>2009 <a href="http://rdrei.net">Pascal Hartig, rDREI.net</a>.</p>
+    </footer><!-- /#contentinfo -->
+
+  </body>
+</html>
