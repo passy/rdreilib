@@ -14,7 +14,7 @@ from meta import Meta, MetaCreator, MetaIntegrityError
 from package import Package, PackageCreator
 
 from os import path, listdir
-import tarfile
+import zipfile
 
 def action_makepkg(directory=('d', '')):
     """Create a update package from ``directory``."""
@@ -78,10 +78,12 @@ def _pack_files(directory, mdata):
         print("! ERROR: File %r already exists!" % filename)
         return
 
-    tar = tarfile.open(filename, 'w')
+    arc = zipfile.ZipFile(filename, 'w')
 
-    tar.add(directory, arcname='.')
-    tar.close()
+    for fname in listdir(directory):
+        arc.write(path.join(directory, fname), fname)
+
+    arc.close()
     print("* Done.")
 
 if __name__ == '__main__':

@@ -36,12 +36,29 @@ class Meta(object):
 
     signature = None
 
-    def __init__(self, filename, gnupghome=None):
-        config_content = open(filename, 'r').read()
+    def __init__(self, filename=None, content=None, gnupghome=None):
+        """Meta data storage for update packages.
+
+        :param filename str Must be specified if content is empty. Path to
+        meta.yaml file.
+        :param content str Content of meta.yaml. Alternative option to filename.
+        Some functions might not be available.
+        :param gnupghome str Optional. Specify path to gnupg home folder.
+        """
+
+        config_content = filename and open(filename, 'r').read() or content
+
+        if config_content is None:
+            raise RuntimeError("Either filename or content must be specified!")
+
         self.data = yaml.load(config_content)
-        self.basedir = dirname(filename)
+
+        if filename:
+            self.basedir = dirname(filename)
+
         if not self.data:
             raise MetaConfigError("Loading config file %r failed!" % filename)
+
         self.gpg = gnupg.GPG(gnupghome=gnupghome)
 
     def check_fields(self):
@@ -54,11 +71,12 @@ class Meta(object):
             except KeyError:
                 raise MetaConfigError("Required field '%s' missing!" % field)
 
-    def check(self):
+    def check(self, signature=True):
         """Performs verious checks to verify file integrity."""
-        self.check_fields
+        self.check_fields()
         self._verify_hash()
-        self._verify_signature()
+        if signature:
+            self._verify_signature()
 
     def _get_package(self):
         """Returns a read-only file objects of the referenced package."""
