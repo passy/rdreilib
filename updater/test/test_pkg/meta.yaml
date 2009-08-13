@@ -1,0 +1,31 @@
+version:
+        revision:     1
+        long:         "0.1ap1"
+        description:  ---
+                A sample update configuration that will
+                serve as a template.
+
+changelog:
+        - Change 1
+        - Change 2
+        - Another change.
+
+package:
+        hash: "7fc77bf5ddf34378075ebefc0ef7eea139264b67"
+        signature: ---
+                iEYEABECAAYFAkqEdpkACgkQC3jHPr+io7AqIQCgoSfcazvEPILR/H6DDWeHM0pz
+                ygAAoMo0BAah4wXvt+JoCEhlB3/gEL2t
+                =rluQ
+        filename: "test.tar.lzma"
+        type: "tar+lzma"
+
+meta:
+        hash: "8a4d0d8dccef037c3c9bd0277260bf208e670cf1"
+        signature: ---
+                iEYEABECAAYFAkqEf2kACgkQC3jHPr+io7CoUACaAjkfeGD/+N1QyGucb/jWC6Gx
+                rSoAoIMpxVxjnKR2wIwCYnwjPSXXHNAc
+                =Z/7N
+        author: "Pascal Hartig"
+        email: "phartig@rdrei.net"
+        fingerprint: "77BD95BEEB64FD33F9829FD40B78C73EBFA2A3B0"
+

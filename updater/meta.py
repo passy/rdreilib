@@ -42,9 +42,9 @@ class Meta(object):
         self.basedir = dirname(filename)
         if not self.data:
             raise MetaConfigError("Loading config file %r failed!" % filename)
-        self.gpg = gnupg.GPG(gnupghome=gnupghome, verbose=True)
+        self.gpg = gnupg.GPG(gnupghome=gnupghome)
 
-    def check(self):
+    def check_fields(self):
         """Checks for required data in config, but only on two dimensions."""
         # Iterate through all required fields and check if they are present.
         for field in self.REQUIRED_FIELDS:
@@ -53,6 +53,10 @@ class Meta(object):
                 self.data[key1][key2]
             except KeyError:
                 raise MetaConfigError("Required field '%s' missing!" % field)
+
+    def check(self):
+        """Performs verious checks to verify file integrity."""
+        self.check_fields
         self._verify_hash()
         self._verify_signature()
 
@@ -124,7 +128,7 @@ class MetaCreator(Meta):
 
     def __init__(self, filename, gnupghome=None):
         super(MetaCreator, self).__init__(filename, gnupghome)
-        self.file = open(filename, 'rw')
+        self.file = open(filename, 'ra')
         self.package = PackageCreator(self)
 
     def make_signatures(self):
@@ -141,6 +145,12 @@ class MetaCreator(Meta):
         }
 
         return data
+
+    def write_data(self, data):
+        """Helper to write signature data into existing file. Needs reformatting
+        afterwards!"""
+
+        self.file.write(yaml.to_yaml(data))
 
     def _sign_meta(self, keyid=None):
         """Signs the meta data with GnuPG.
