@@ -257,7 +257,7 @@ class GPG(object):
         self._handle_io([], file, result)
         return result
 
-    def verify_detached(self, filename, sign):
+    def verify_detached(self, filename, sign, _nodelete=False):
         """Verify a detached signature `sign` of `file`."""
         # Create temporary signature file.
 
@@ -275,8 +275,8 @@ class GPG(object):
             p = self._open_subprocess(args)
             self._collect_output(p, result)
         finally:
-            pass
-            os.unlink(signature_fname)
+            if not _nodelete:
+                os.unlink(signature_fname)
 
         return result
 
