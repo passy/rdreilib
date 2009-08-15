@@ -12,10 +12,17 @@
 import yaml
 import httplib
 import base64
+import tempfile
+
+from os import path
 
 import __version__
 
+
 class Downloader(object):
+    PACKACKE_PATTERN = "update_%d.r3u"
+    repoyaml = None
+
     def __init__(self, host, path, credentials=None, port=80):
         """Creates a download helper for a specific repository. The repository
         currently must be a WebDAV style http server with HTTP Basic
@@ -39,9 +46,9 @@ class Downloader(object):
         if self.credentials is None:
             return dict()
 
-        base64str = base64.encodestring("%(username)s:%(password)s" % (self.credentials))
+        base64str = base64.encodestring("%(username)s:%(password)s" %
+                                        (self.credentials))
         return {'Authorization': "Basic %s" % base64str}
-
 
     def _request(self, filename):
         """Opens a request to the server, sends credentials if provided and
@@ -71,12 +78,45 @@ class Downloader(object):
 
     def _get_repo_meta(self):
         """Fetches and parses the meta data on the server."""
-        repometa = self._request("repository.yaml")
-        repoyaml = yaml.load(repometa)
+        if not self.repoyaml:
+            repometa = self._request("repository.yaml")
+            self.repoyaml = yaml.load(repometa)
 
-        if repoyaml['version'] > __version__:
+        if self.repoyaml['version'] > __version__:
             raise DownloaderError("Unsupported server "
                                   "version! Update your client!")
+
+        return self.repoyaml
+
+    def get_version(self):
+        """Gets the most recent version on the server."""
+
+        repoyaml = self._get_repo_meta()
+        return repoyaml['revision']
+
+    def download_package(self, revision, destination=None):
+        """Downloads a update package for a specific revision. You're
+        responsible to bring out the garbage, when done using this.
+
+        :param revision: revision of package to download.
+        :param destination: Path or filename to download to package.
+
+        :return: Absolute path of downloaded package."""
+
+        filename = self.PACKACKE_PATTERN % revision
+
+        # Open the output file.
+        if destination:
+            if path.isdir(destination):
+                out = tempfile.NamedTempFile(delete=False, dir=destination)
+            else:
+                out = open(destination, 'wb')
+        else:
+            out = tempfile.NamedTempFile(delete=False)
+
+        out.write(self._request(filename))
+
+        return out.name
 
 
 class DownloaderError(Exception):

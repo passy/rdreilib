@@ -17,6 +17,9 @@ class BaseController(object):
     """Base class for controllers"""
     helpers = {}
 
+    def __init__(self):
+        print "Constructed %r!" % self
+
     @property
     def session(self):
         """Get current glashammer/securecookie session"""
