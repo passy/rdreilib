@@ -13,6 +13,8 @@ import yaml
 import httplib
 import base64
 
+import __version__
+
 class Downloader(object):
     def __init__(self, host, path, credentials=None, port=80):
         """Creates a download helper for a specific repository. The repository
@@ -72,3 +74,10 @@ class Downloader(object):
         repometa = self._request("repository.yaml")
         repoyaml = yaml.load(repometa)
 
+        if repoyaml['version'] > __version__:
+            raise DownloaderError("Unsupported server "
+                                  "version! Update your client!")
+
+
+class DownloaderError(Exception):
+    pass
