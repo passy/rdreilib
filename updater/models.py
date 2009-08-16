@@ -11,7 +11,7 @@ Persistance layer for R3U
 import sqlalchemy as db
 from sqlalchemy import orm
 
-from ..database import ModelBase
+from ..database import ModelBase, session
 from ..p2lib import P2Mixin
 
 import logging
@@ -40,29 +40,38 @@ class VersionLog(ModelBase):
     revision = db.Column(db.Integer, unique=True)
     long_version = db.Column(db.Unicode(15), unique=True)
 
-    last_updated = db.Column(db.DateTime)
 
     def __init__(self, revision, long_version):
         self.revision = revision
         self.long_version = long_version
-        self.last_updated = datetime.datetime.now()
 
     def __repr__(self):
         if self.id:
             return u"<VersionLog(%d, revision=%d, 'long_version='%s'"\
                     ")>" (self.id, self.revision, self.long_version)
-                          
+
         else:
             return u"<VersionLog(unsafed)>"
 
+class UpdateLogQuery(orm.Query):
+    def get_latest(self):
+        """Get the latest successful installed version."""
+        entry = self.filter(UpdateLog._state==UPDATE_STATES['success'])\
+                .order_by(UpdateLog.updated.desc())\
+                .first()
+
+        return entry
 
 class UpdateLog(ModelBase):
     """Contains live data about current updating progress."""
+
+    query = session.query_property(UpdateLogQuery)
 
     __tablename__ = "updater_updatelog"
     id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     version_id = db.Column(db.Integer, db.ForeignKey('updater_versionlog.id',
                                                      ondelete="CASCADE"))
+    updated = db.Column(db.DateTime)
     version = orm.relation(VersionLog, backref='update_log')
 
     _state = db.Column(db.SmallInteger)
@@ -77,7 +86,7 @@ class UpdateLog(ModelBase):
 
         elif value in UPDATE_STATES.keys():
             self._state = UPDATE_STATES[value]
-        
+
         else:
             raise ValueError("State must be an integer or string specified "
                              " in UPDATE_STATES!")
@@ -89,4 +98,9 @@ class UpdateLog(ModelBase):
         self.version = version
         self.state = state
         self.message = message and message or ''
+        self.updated = datetime.datetime.now()
+
+    def __repr__(self):
+        return u"<UpdateLog(%d, '%s')>" % (self.state, self.message)
+
 
