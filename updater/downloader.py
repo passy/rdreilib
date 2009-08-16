@@ -13,10 +13,13 @@ import yaml
 import httplib
 import base64
 import tempfile
+import logging
 
 from os import path
-
 from version import __version__
+
+
+log = logging.getLogger('rdreilib.updater.downloader')
 
 
 class Downloader(object):
@@ -93,6 +96,7 @@ class Downloader(object):
     def _get_repo_meta(self):
         """Fetches and parses the meta data on the server."""
         if not self.repoyaml:
+            log.debug("Requesting repository yaml data.")
             repometa = self._request("repository.yaml")
             self.repoyaml = yaml.load(repometa)
 

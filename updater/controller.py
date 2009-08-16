@@ -10,9 +10,9 @@
  """
 
 from .downloader import Downloader
-from .config import get_config
+from .models import VersionLog, UpdateLog
 
-from werkzeug.wrappers import BaseResponse
+from glashammer.utils.local import local, get_app
 from ..controller import BaseController
 from ..jsonlib import json_view
 
@@ -21,16 +21,17 @@ class UpdateController(BaseController):
     endpoint = "updater"
 
     def index(self, request):
+        assert False
         return self.render("index.html")
 
     def _get_downloader(self):
-        return Downloader.from_config(get_config())
+        return Downloader.from_config(get_app().updater_config)
 
     @json_view
     def ajax_check_update(self, request):
         dl = self._get_downloader()
         rev = dl.get_version()
+        cur = UpdateLog.query.get_latest().version.revision
 
-        return [rev, 0]
-
+        return [rev, cur]
 

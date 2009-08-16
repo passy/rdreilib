@@ -9,11 +9,9 @@ Configuration module.
 """
 
 from glashammer.utils.config import Configuration
-from glashammer.utils.local import local
 
 from version import __version__
 import logging
-import os
 
 
 log = logging.getLogger('rdreilib.updater.config')
@@ -45,17 +43,3 @@ class UpdaterConfig(Configuration):
         config['server/password'] = (str, str())
 
         self.config_vars.update(config)
-
-
-def get_config(filename):
-    """Gets a configuration object from local storage or creates a new one on
-    the fly."""
-    if not hasattr(local, 'updater_config'):
-        log.debug("Setting up UpdaterConfig")
-        local.updater_config = UpdaterConfig(filename)
-        if not os.path.exists(filename):
-            # Forces to rewrite
-            local.updater_config.change_single('general/version', __version__)
-
-    return local.updater_config
-

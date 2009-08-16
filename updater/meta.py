@@ -168,7 +168,7 @@ class MetaCreator(Meta):
         """Helper to write signature data into existing file. Needs reformatting
         afterwards!"""
 
-        self.file.write(yaml.to_yaml(data))
+        self.file.write(yaml.dump(data))
 
     def _sign_meta(self, keyid=None):
         """Signs the meta data with GnuPG.
