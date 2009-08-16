@@ -9,6 +9,9 @@
  :license: GPL v3, see doc/LICENSE for more details.
  """
 
+from .models import VersionLog, UpdateLog
+from ..database import session
+
 from werkzeug import script
 from meta import Meta, MetaCreator, MetaIntegrityError
 from package import Package, PackageCreator
@@ -40,6 +43,17 @@ def action_makepkg(directory=('d', '')):
         meta = Meta(metapath)
         if _check_dir(directory, meta.data):
             _pack_files(directory, meta.data)
+
+def action_initdb(revision=('r', '1')):
+    """This relies on a connected sqlalchemy engine, so you have to have
+    make_app() executed previously."""
+
+    vl_entry = VersionLog(revision, long_version="0.1")
+    ul_entry = UpdateLog(vl_entry, state=10, message="Initial revision created")
+
+    session.add(vl_entry)
+    session.add(ul_entry)
+    session.commit()
 
 def _build_meta(config):
     """Creates required signatures and hashes."""
