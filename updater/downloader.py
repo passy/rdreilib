@@ -30,14 +30,28 @@ class Downloader(object):
 
         :param host: Hostname like 'box.net'
         :param path: Absolute path containing the root dir of up
-        :param credentials dict: A dictionary containing a 'username' and
-                                'password' attribute.
+        :param credentials dict: A dictionary containing a ``username`` and
+                                ``password`` attribute.
         """
 
         self.host = host
         self.path = path
         self.port = port
         self.credentials = credentials
+
+    @classmethod
+    def from_config(cls, cfg):
+        """Creates an instance of Downloader from a config object."""
+        credentials = None
+        if cfg['server/username'] and cfg['server/password']:
+            credentials = {'username': cfg['server/username'],
+                           'password': cfg['server/password']}
+        return cls(
+            cfg['server/host'],
+            cfg['server/path'],
+            credentials,
+            cfg['server/port']
+        )
 
     def _authorize_headers(self):
         """Formats ``self.credentials`` into a HTTP Basic Authorization
