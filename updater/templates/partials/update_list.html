@@ -1,0 +1,20 @@
+<ol id="posts-list" class="hfeed">
+{% for update in update_list %}
+  <li>
+    <article class="hentry">
+    <header>
+    <h2 class="entry-title">
+      <a href="#update_{{ update.id }}">Update to revision {{ update.revision }} is available!</a>
+    </h2>
+    </header>
+    <footer class="post-info">
+      <abbr class="published">{{ update.date }}</abbr>
+      <div class="severity level-{{ update.level }}">Severity {{ update.level }}</div>
+    </footer>
+    <div class="entry-content">
+      <p><a href="#todo">Click to download.</a></p>
+    </div>
+    </article>
+  </li>
+{% endfor %}
+</ol>

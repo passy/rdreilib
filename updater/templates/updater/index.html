@@ -1,10 +1,54 @@
 {% extends "updater/layout.html" %}
 {% set page_title = _("Updater Home") %}
-{% block content %}
-<article>
-<header>
-  <h2>Hello World!</h2>
-</header>
-<p>This is a sample text.</p>
+{% block aside %}
+<article id="check1">
+  <figure>
+    <img src="{{ url_for('shared/updater', filename='images/logo.png') }}" alt="Update Box" />
+  </figure>
+  <hgroup>
+    <h2>Check for Updates</h2>
+    <h3><a href="#" id="update_link">Click to check for available updates for {{ app_name }}</a></h3>
+  </hgroup>
+  <p>Updates provide more features, bug fixes and security patches. Be sure
+  to check for updates from time to time.</p>
 </article>
+<article id="check2" class="hidden">
+  <figure>
+    <img src="{{ url_for('shared/updater', filename='images/up_to_date.png') }}" alt="You are up to date!" />
+  </figure>
+  <hgroup>
+    <h2>You are Up To Date!</h2>
+  </hgroup>
+  <p>There are currently no new updates available.<br />Thank you!</p>
+</article>
+{% endblock aside %}
+
+{% set content_classes="body hidden" %}
+{% block content %}
+<ol id="posts-list" class="hfeed">
+  <li>
+    <article class="hentry">
+    <header>
+    <h2 class="entry-title">
+      <a href="#update_X">Update to revision X is available!</a>
+    </h2>
+    </header>
+    <footer class="post-info">
+      <abbr class="published">So, 16. August, 2009</abbr>
+      <div class="severity level-2">Severity 2</div>
+    </footer>
+    <div class="entry-content">
+      <p>Click to download.</p>
+    </div>
+    </article>
+  </li>
+</ol>
+{% endblock %}
+{% block scripts %}
+<script type="text/javascript" src="{{url_for('shared/updater', filename='js/updater.js')}}"></script>
+<script type="text/javascript">
+  $(function() {
+    new UpdateApplication();
+  });
+</script>
 {% endblock %}

@@ -15,7 +15,7 @@ from werkzeug.routing import Rule
 def make_urls():
     return [
         Rule('/', endpoint='updater/index'),
-        Rule('/ajax/check_update', endpoint='updater/ajax_check_update'), 
+        Rule('/ajax/check_update', endpoint='updater/ajax_check_update'),
     ]
 
 __all__ = ('make_urls')
