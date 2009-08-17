@@ -16,6 +16,12 @@ from glashammer.utils.local import local, get_app
 from ..controller import BaseController
 from ..jsonlib import json_view
 
+import datetime
+import logging
+
+
+log = logging.getLogger('rdreilib.updater.controller')
+
 
 class UpdateController(BaseController):
     endpoint = "updater"
@@ -23,38 +29,51 @@ class UpdateController(BaseController):
     def __init__(self):
         self.config = get_app().updater_config
 
-    def index(self, request):
+    def index(self, req):
         return self.render("index.html", app_name=self.config['general/appname'])
 
-    def _get_downloader(self):
-        return Downloader.from_config(self.config)
+    def _get_downloader(self, req):
+        """Gets a cached instance of Downloader"""
+        dlcache = req.cache.get_cache('downloader', expire=300)
+        if 'downloader' not in dlcache:
+            log.debug("Creating Downloader object from scratch.")
+            dlcache['downloader'] = Downloader.from_config(self.config)
+
+        return dlcache['downloader']
 
     def _get_current(self):
         return UpdateLog.query.get_latest().version.revision
 
     @json_view
-    def ajax_check_update(self, request):
-        dl = self._get_downloader()
+    def ajax_check_update(self, req):
+        dl = self._get_downloader(req)
         rev = dl.get_version()
         cur = self._get_current()
 
         return [rev, cur]
 
-    def ajax_update_skeleton(self, request):
+    def ajax_update_skeleton(self, req):
         # TODO: Get this from session or cache
-        cur = self._get_current
-        diff = (self._get_downloader().get_version()-cur)
-        assert diff > 0, "Server is not up-to-date!"
+        cur = self._get_current()
+        repometa = self._get_downloader(req).get_repo_meta()
+        diff = (self._get_downloader(req).get_version()-cur)
+        assert diff > 0, "Client version is ahead of server's!"
 
         updates = list()
-        for i in xrange(diff):
-            updates.append({
-                'revision': cur+i+1,
-            })
+        if diff > 0:
+            # Spare the cpu cycles if there is no update available.
+            for revision, update in repometa['updates'].iteritems():
+                if revision <= cur:
+                    continue
 
-        #TODO: Continue here. Get the real meta data and somehow format this.
+                updates.append(dict(
+                    revision=revision,
+                    level=update['level'],
+                    description=update['description'],
+                    date=datetime.datetime.now() # Not in repo so far!
+                ))
 
         return self.render("update_list.html", _path="partials",
-                           updates=updates)
+                           update_list=updates)
 
 
