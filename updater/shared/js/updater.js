@@ -20,7 +20,7 @@ function UpdateApplication() {
     }
 
     function load_update_table() {
-        $("#post-list").load("ajax/update_skeleton");
+        $("#content").load("ajax/update_skeleton").fadeIn();
     }
 
 }

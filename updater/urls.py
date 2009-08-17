@@ -16,6 +16,7 @@ def make_urls():
     return [
         Rule('/', endpoint='updater/index'),
         Rule('/ajax/check_update', endpoint='updater/ajax_check_update'),
+        Rule('/ajax/update_skeleton', endpoint='updater/ajax_update_skeleton'),
     ]
 
 __all__ = ('make_urls')

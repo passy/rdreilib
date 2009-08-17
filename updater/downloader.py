@@ -93,7 +93,7 @@ class Downloader(object):
 
         return resp_str
 
-    def _get_repo_meta(self):
+    def get_repo_meta(self):
         """Fetches and parses the meta data on the server."""
         if not self.repoyaml:
             log.debug("Requesting repository yaml data.")
@@ -109,7 +109,7 @@ class Downloader(object):
     def get_version(self):
         """Gets the most recent version on the server."""
 
-        repoyaml = self._get_repo_meta()
+        repoyaml = self.get_repo_meta()
         return repoyaml['revision']
 
     def download_package(self, revision, destination=None):
