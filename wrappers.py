@@ -24,13 +24,20 @@ log = logging.getLogger('rdreilib.wrappers')
 class Request(GHRequest):
 
     _user = None
+    _cache = None
 
     @property
     def session(self):
-        return get_session()
-        
+        if 'beaker.session' in self.environ:
+            return self.environ['beaker.session']
+        else:
+            return get_session()
+
     @property
     def cache(self):
+        if self._cache is not None:
+            return self._cache
+
         return self.app.cache
 
     @property
@@ -74,6 +81,9 @@ class Request(GHRequest):
 
     def unset_user(self):
         self._user = None
+
+    def set_cache(self, cache):
+        self._cache = cache
 
 class Response(GHResponse):
     pass

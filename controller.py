@@ -10,6 +10,7 @@
  """
 
 from glashammer.utils.wrappers import render_response
+from glashammer.utils.local import get_request
 from glashammer.bundles.sessions import get_session
 from eauth.template import TemplateUser
 
@@ -20,7 +21,12 @@ class BaseController(object):
     @property
     def session(self):
         """Get current glashammer/securecookie session"""
-        return get_session()
+        # TODO: This has to be refactored! This is in Request, too!
+        req = get_request()
+        if 'beaker.session' in req.environ:
+            return req.environ['beaker.session']
+        else:
+            return get_session()
 
     @classmethod
     def register(cls, app):
@@ -57,8 +63,8 @@ class BaseController(object):
         """Sets a flash that is displayed in the next view."""
         key = instant and 'flash' or '_flash'
         self.session[key] = {'message': message,
-                                 'level': level,
-                                 'id': id(self)}
+                             'level': level,
+                             'id': id(self)}
 
     def _get_flash(self):
         "Get the last flash and push current to session."
