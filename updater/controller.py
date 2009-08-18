@@ -34,12 +34,8 @@ class UpdateController(BaseController):
 
     def _get_downloader(self, req):
         """Gets a cached instance of Downloader"""
-        dlcache = req.cache.get_cache('downloader', expire=300)
-        if 'downloader' not in dlcache:
-            log.debug("Creating Downloader object from scratch.")
-            dlcache['downloader'] = Downloader.from_config(self.config)
-
-        return dlcache['downloader']
+        return Downloader.from_config(self.config,
+                                      req.cache.get_cache('downloader', expire=300))
 
     def _get_current(self):
         return UpdateLog.query.get_latest().version.revision

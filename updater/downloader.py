@@ -24,9 +24,9 @@ log = logging.getLogger('rdreilib.updater.downloader')
 
 class Downloader(object):
     PACKACKE_PATTERN = "update_%d.r3u"
-    repoyaml = None
+    _repoyaml = None
 
-    def __init__(self, host, path, credentials=None, port=80):
+    def __init__(self, host, path, credentials=None, port=80, cache=None):
         """Creates a download helper for a specific repository. The repository
         currently must be a WebDAV style http server with HTTP Basic
         authorization. Consider box.net for that.
@@ -35,15 +35,35 @@ class Downloader(object):
         :param path: Absolute path containing the root dir of up
         :param credentials dict: A dictionary containing a ``username`` and
                                 ``password`` attribute.
+        :param cache: Optional caching object to store yaml data in.
         """
 
         self.host = host
         self.path = path
         self.port = port
         self.credentials = credentials
+        self.cache = cache
+
+    @property
+    def repoyaml(self):
+        """Property for either cached or uncached access of repoyaml depending
+        on whether a Cache instance is present or not."""
+        if self.cache is not None:
+            if 'repoyaml' in self.cache:
+                return self.cache['repoyaml']
+
+        return self._repoyaml
+
+    @repoyaml.setter
+    def repoyaml(self, value):
+        if self.cache is not None:
+            self.cache['repoyaml'] = value
+
+        else:
+            self._repoyaml = value
 
     @classmethod
-    def from_config(cls, cfg):
+    def from_config(cls, cfg, cache=None):
         """Creates an instance of Downloader from a config object."""
         credentials = None
         if cfg['server/username'] and cfg['server/password']:
@@ -53,7 +73,8 @@ class Downloader(object):
             cfg['server/host'],
             cfg['server/path'],
             credentials,
-            cfg['server/port']
+            cfg['server/port'],
+            cache
         )
 
     def _authorize_headers(self):
@@ -95,7 +116,7 @@ class Downloader(object):
 
     def get_repo_meta(self):
         """Fetches and parses the meta data on the server."""
-        if not self.repoyaml:
+        if self.repoyaml is None:
             log.debug("Requesting repository yaml data.")
             repometa = self._request("repository.yaml")
             self.repoyaml = yaml.load(repometa)
