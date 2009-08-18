@@ -8,11 +8,12 @@
     </h2>
     </header>
     <footer class="post-info">
-      <abbr class="published">{{ update['date'] }}</abbr>
-      <div class="severity level-{{ update['level'] }}">Severity {{ update['level'] }}</div>
+    <a class="action download" href="#download">Download</a>
     </footer>
     <div class="entry-content">
-      <p><a href="#todo">Click to download.</a></p>
+      <p>{{update['description']|e}}</p>
+      <abbr class="published">Published on {{ update['date'] }}</abbr>
+      <div class="severity-{{ update['level'] }}">{{ update['level'] }}</div>
     </div>
     </article>
   </li>
