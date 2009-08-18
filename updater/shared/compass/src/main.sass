@@ -2,6 +2,7 @@
 
 @import url("global-forms.css")
 
+!SM_RED= #C74350
 
 body
   background: #F5F4EF url('../images/bg.png')
@@ -48,12 +49,12 @@ a
     text-decoration: none
 
   &:link, &:visited
-    color: #C74350
+    color= !SM_RED
     padding: 0 1px
     text-decoration: underline
 
   &:hover, &:active
-    background-color: #C74350
+    background-color= !SM_RED
     color: #fff
     text-decoration: none
     text-shadow: 1px 1px 1px #333
@@ -164,7 +165,7 @@ figure.left
 
       &:hover, &:active
         background: none
-        color: #C74350
+        color= !SM_RED
         text-shadow: none
 
     strong
@@ -237,10 +238,13 @@ figure.left
     float: right
     margin: 0.786em 2em 0 5em
     width: 128px
+    height: 128px
+    line-height: 168px
+    text-align: center
 
     img
-      display: block
-      float: right
+      // display: block
+      // float: right
 
   h2
     color: #C74451
@@ -283,7 +287,7 @@ figure.left
     border-bottom: 1px solid #fff
 
   h2
-    color: #C74350
+    color= !SM_RED
     font-size: 1.429em
     margin-bottom: .25em
     padding: 0 3px
@@ -405,6 +409,7 @@ li:last-child .hentry
 
 
 .entry-title
+  color= !SM_RED
   font-size: 1.429em
   margin-bottom: 0
 
@@ -416,6 +421,9 @@ li:last-child .hentry
 .hentry
   .post-info *
     font-style: normal
+
+  abbr
+    font-style: italic
 
   footer
     margin-bottom: 2em

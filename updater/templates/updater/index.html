@@ -9,8 +9,12 @@
     <h2>Check for Updates</h2>
     <h3><a href="#" id="update_link">Click to check for available updates for {{ app_name }}</a></h3>
   </hgroup>
-  <p>Updates provide more features, bug fixes and security patches. Be sure
+  <p class="intro">Updates provide more features, bug fixes and security patches. Be sure
   to check for updates from time to time.</p>
+  <p class="available hidden">
+  There are <span id="update_count">0</span> updates available. Check the list
+  below and download the updates to obtain more information on them!
+  </p>
 </article>
 <article id="check2" class="hidden">
   <figure>
@@ -30,15 +34,13 @@
     <article class="hentry">
     <header>
     <h2 class="entry-title">
-      <a href="#update_X">Update to revision X is available!</a>
+      <a href="#update_X">Loading ...</a>
     </h2>
     </header>
     <footer class="post-info">
-      <abbr class="published">So, 16. August, 2009</abbr>
-      <div class="severity level-2">Severity 2</div>
+    <abbr class="published"><img class="minispin" src="{{ url_for('shared/updater', filename='images/spinner.apng') }}" alt="Spinner"  /></abbr>
     </footer>
     <div class="entry-content">
-      <p>Click to download.</p>
     </div>
     </article>
   </li>
@@ -48,7 +50,7 @@
 <script type="text/javascript" src="{{url_for('shared/updater', filename='js/updater.js')}}"></script>
 <script type="text/javascript">
   $(function() {
-    new UpdateApplication();
+    window.ua = new UpdateApplication();
   });
 </script>
 {% endblock %}
