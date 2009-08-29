@@ -97,7 +97,7 @@ class ModelConverter(object):
             'label': column.info.get('label', column.name),
             'description': column.description,
             'validators': [],
-            'default': column.default # This can be a callable or ClauseElement!
+            'default': column.default and column.default.arg
         }
         
         if column.info.get('optional', False):
