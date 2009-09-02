@@ -24,14 +24,17 @@ class PermissionError(Exception):
     pass
 
 class SidebarModule(object):
-    name = str()
-    target_id = str()
-    target_class = str()
-    init_cmd = str()
+    # Base shortcut for all identifiers build by _set_defaults
+    _modulename = None
+    name = None
+    target_id = None
+    target_class = None
+    init_cmd = None
     meta = dict()
     extra = dict()
     
-    template = str()
+    template = None
+    template_path = None
     #: Sets whether extra kwargs are accepted or not.
     accept_extra = False
     
@@ -47,7 +50,22 @@ class SidebarModule(object):
         self.meta['template'] = self.template
         
     def _set_defaults(self):
-        raise NotImplementedError()
+        """Override to provide module defaults."""
+        
+        if self._modulename is None:
+            raise NotImplementedError("Either specify _modulename or implement "
+                                      "_set_defaults.")
+
+        if self.target_id is None:
+            self.target_id = "%s_%s_module" % (self._modulename, self.name)
+
+        if self.target_class is None:
+            self.target_class = "%s_%s" % (self._modulename, self.name)
+
+        if self.template is None:
+            self.template = "%s.html" % self.name
+
+
 
     @classmethod
     def request_module(cls, name, request, *args, **kwargs):
@@ -170,7 +188,7 @@ class SidebarModule(object):
             raise JSONException("Could not find an instance of what you are "
                                 "searching for.")
         if user_attr:
-            attr = getattr(instance, user_attr) 
+            attr = getattr(instance, user_attr)
             if attr != self.request.user:
                 raise PermissionError("You are not authorized to view and/or "
                                       "alter this instance.")

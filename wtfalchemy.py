@@ -59,7 +59,12 @@ class SuperForm(Form):
             for fname in options.get('fields', []):
                 if fname in self:
                     # Make required fields more obvious to the view
-                    required = len(filter(lambda x: hasattr(x, 'func_name') and x.func_name == '_required' or getattr(x, 'field_flags', None) == ('required'), self[fname].validators)) == 1
+                    required = len(filter(lambda x: hasattr(x, 'func_name') and\
+                                          x.func_name == '_required' or\
+                                          getattr(x, 'field_flags', None) == ('required'),
+                                          self[fname].validators)
+                                  ) == 1
+
                     setattr(self[fname], 'required', required)
 
                     _context['fields'].append(self[fname])
