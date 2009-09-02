@@ -49,6 +49,7 @@ class BaseController(object):
         kwargs.update(user=TemplateUser())
         kwargs.update(helpers=self.helpers)
         kwargs.update(flash=self._get_flash())
+        kwargs.update(session=self.session)
 
         return render_response(template, *args, **kwargs)
 
