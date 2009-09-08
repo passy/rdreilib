@@ -87,8 +87,8 @@ class SidebarModule(object):
             log.debug("Loading probably parameterized module %r." % pname)
             sm_class = cls.get_class(pname[0])
             if not sm_class.accept_extra:
-                # Don't tell those script kiddies too much.
-                raise LookupError()
+                raise LookupError("Extra parameters not supported for module "
+                                  "%r." % pname[0])
             kwargs['extra'] = pname[1]
 
         sm = sm_class(request, *args, **kwargs)

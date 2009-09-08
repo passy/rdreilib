@@ -42,28 +42,39 @@ def set_ajax_token(func):
     else:
         raise TypeError("Func is not a function or a request object.")
 
-def require_ajax_token(func):
-    """Decorator that throws a JSONException if a _ajax_token is not set in 
-    POST and sets a new token if it was found."""
-    @wraps(func)
-    def decorate(self, req, *args, **kwargs):
-        if '_ajax_token' not in req.form or \
-           'security.ajax_token' not in req.session or \
-           req.form['_ajax_token'] != req.session['security.ajax_token']:
-            try:
-                log.debug("Expected: %r, got %r.",
-                          req.session['security.ajax_token'],
-                          req.form['_ajax_token'])
-            except KeyError, err:
-                pass
+def require_ajax_token_factory(reset):
+    """Creates a new decorator for ajax token validation.
+    :param reset {bool}: Sets whether to automatically generate a new one or
+    keep the old.
+    :return: func
+    """
+    def outer(func):
+        """Decorator that throws a JSONException if a _ajax_token is not set in 
+        POST and sets a new token if it was found."""
+        @wraps(func)
+        def decorate(self, req, *args, **kwargs):
+            if '_ajax_token' not in req.form or \
+               'security.ajax_token' not in req.session or \
+               req.form['_ajax_token'] != req.session['security.ajax_token']:
+                try:
+                    log.debug("Expected: %r, got %r.",
+                              req.session['security.ajax_token'],
+                              req.form['_ajax_token'])
+                except KeyError, err:
+                    pass
 
-            raise JSONException(_("Invalid AJAX token!"
-                                  " Please reload this page."))
-        else:
-            token = _generate_token()
-            req.session['security.ajax_token'] = token
-            return func(self, req, *args, **kwargs)
-    return decorate
+                raise JSONException(_("Invalid AJAX token!"
+                                      " Please reload this page."))
+            else:
+                if reset:
+                    token = _generate_token()
+                    req.session['security.ajax_token'] = token
+                return func(self, req, *args, **kwargs)
+        return decorate
+    return outer
+
+# Default decorator.
+require_ajax_token = require_ajax_token_factory(True)
 
 def enhance_ajax_token(req, dic):
     """Enhances a response dictionary be a '_ajax_token' value."""
