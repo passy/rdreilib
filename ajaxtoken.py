@@ -9,7 +9,6 @@
  :license: GPL v3, see doc/LICENSE for more details.
 """
 
-__all__ = ('set_ajax_token', 'require_ajax_token', 'enhance_ajax_token')
 
 from glashammer.utils import get_app, Request
 from glashammer.bundles.i18n import _
@@ -61,7 +60,8 @@ def require_ajax_token_factory(reset):
                               req.session['security.ajax_token'],
                               req.form['_ajax_token'])
                 except KeyError, err:
-                    pass
+                    log.warn("Encountered key error while retrieving ajax"
+                              "debug information. Probably broken session.")
 
                 raise JSONException(_("Invalid AJAX token!"
                                       " Please reload this page."))
@@ -80,7 +80,8 @@ def enhance_ajax_token(req, dic):
     """Enhances a response dictionary be a '_ajax_token' value."""
     if type(dic) != dict:
         raise TypeError("Expected a dictionary.")
-        
+
     dic.update({'_ajax_token': req.session['security.ajax_token']})
     return dic
-    
+
+__all__ = ('set_ajax_token', 'require_ajax_token', 'enhance_ajax_token')

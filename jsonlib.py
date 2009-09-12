@@ -10,6 +10,7 @@
 """
 
 from glashammer.utils.json import JsonResponse
+from glashammer.utils.local import get_app
 from glashammer.bundles.i18n import _TranslationProxy
 from werkzeug.wrappers import Response
 from simplejson import dumps as dump_json, JSONEncoder
@@ -34,7 +35,7 @@ class LazyEncoder(JSONEncoder):
             super(LazyEncoder, self).default(o)
 
 class JsonResponse(Response):
-    default_mimetype = 'text/javascript'
+    default_mimetype = 'application/json'
 
     def __init__(self, data, *args, **kw):
         #default = kw.get("json_encoder", None)
@@ -44,7 +45,9 @@ class JsonResponse(Response):
 
 def json_view(f, encoder=None):
     """
-    Decorator to jsonify responses
+    Decorator to jsonify responses. Catches exceptions and wraps them into a
+    JsonResponse. Decides whether to set the status code to 500 or 200 depending
+    on current debug settings.
     """
     @wraps(f)
     def _wrapped(*args, **kw):
@@ -53,7 +56,10 @@ def json_view(f, encoder=None):
         except Exception, err:
             log.error("View error: %s" % traceback.format_exc())
             resp = JsonResponse({'error': repr(err)})
-            resp.status_code = 500
+            # Choosing 500 would be more meaningful, but makes it unparsable for
+            # jQuery. If debug mode is off, we return a 500 and be less verbose.
+            if not get_app().cfg['debug']:
+                resp.status_code = 500
             return resp
         if callable(res):
             return res
