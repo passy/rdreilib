@@ -14,6 +14,8 @@ import re, logging
 log = logging.getLogger("rdreilib.filters")
 
 def datetimeformat(value, format='%H:%M / %d-%m-%Y'):
+    """Formats a date with strftime properyly. With no parameter supplied,
+    :func:``datetimeformat`` chooses a default display."""
     return value.strftime(format)
 
 def highlight(value, hl, markup='<strong class="highlight">%s</strong>'):
@@ -53,3 +55,7 @@ def highlight_legacy(value, hl, markup='<strong class="highlight">%s</strong>'):
             value = (markup % single_hl).join(value.split(single_hl))
 
     return value
+
+def intdisplay(value):
+    """Simple method to display a float value as rounded integer."""
+    return "%d" % round(value)
