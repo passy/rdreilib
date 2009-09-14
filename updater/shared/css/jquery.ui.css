@@ -508,8 +508,8 @@
 
 .ui-draggable .ui-dialog-titlebar { cursor: move; }
 
-.ui-progressbar { height: 2em; text-align: left; }
-.ui-progressbar .ui-progressbar-value { margin: -1px; height: 100%; }
+.ui-progressbar { height: 22px; text-align: left; }
+.ui-progressbar .ui-progressbar-value { margin: -1px; height: 100%; background-image: url(/_shared/updater/images/jquery/pbar-ani.gif); }
 
 .ui-resizable { position: relative; }
 

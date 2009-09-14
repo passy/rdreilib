@@ -4,11 +4,11 @@
     <article class="hentry">
     <header>
     <h2 class="entry-title">
-      <a href="#update_{{ update['revision'] }}">Update to revision {{ update['revision'] }} is available!</a>
+      <a href="#start_download_{{ update['revision'] }}">Update to revision {{ update['revision'] }} is available!</a>
     </h2>
     </header>
     <footer class="post-info">
-    <a class="action download" href="#download">Download</a>
+    <a class="action download" id="start_download_{{ update['revision'] }}" href="#download">Download</a>
     </footer>
     <div class="entry-content">
       <p>{{update['description']|e}}</p>

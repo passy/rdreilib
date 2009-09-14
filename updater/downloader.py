@@ -203,7 +203,7 @@ class Downloader(object):
 
     def get_repo_meta(self):
         """Fetches and parses the meta data on the server."""
-        if self.repoyaml is not None:
+        if self.repoyaml is None:
             log.debug("Requesting repository yaml data.")
             repometa = self._request("repository.yaml")
             self.repoyaml = yaml.load(repometa)

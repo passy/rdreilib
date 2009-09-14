@@ -72,4 +72,12 @@ class UpdateController(BaseController):
         return self.render("update_list.html", _path="partials",
                            update_list=updates)
 
+    @json_view
+    def ajax_start_download(self, req):
+        """Starts a new download. Checks whether requested revision is not
+        already applied or a upgrade to this version is already in progress.
+        :param req.POST['revision']: Integer of the revision to install."""
+        #TODO: Stub
+        return {'success': {'message': "Download started."}}
+
 

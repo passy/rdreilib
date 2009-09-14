@@ -14,11 +14,38 @@
 function UpdateTableApplication() {
     // Not actually a html table, but it contains data in kind of a grid.
     this.$table = $("#posts-list");
-    this.$table.find(".action.download").click(this.download);
+    this.$table.find(".action.download").one('click', this.download_start);
 }
 
-UpdateTableApplication.prototype.download = function () {
+UpdateTableApplication.prototype.download_start = function () {
+    // TODO: CSRF
+    var $this = $(this);
+    var download_id = $this.attr('id').split('start_download_')[1];
+    $.post("ajax/download/start", {
+        revision: download_id
+    }, window.uta.on_download_started, 'json');
+    // Replace the download button with a status bar.
+    $this.click(window.uta.download_stop).text("Cancel").after(
+        $("<div>").hide().attr('id', 'download_progressbar_'+download_id).progressbar({
+            value: 50
+        }).effect('drop', {mode: 'show'})
+    );
+    // TODO: Disable other downloads or allow them in the downloads controller
+    // as well and only make upgrades exclusive. I think this is not really
+    // useful. It would be better to make installing previous updates necessary
+    // in order to install later ones.
+};
 
+UpdateTableApplication.prototype.update_download_step = function (download_id, progress) {
+    $("#download_progressbar_"+download_id).animate({width: progress+"%"});
+};
+
+UpdateTableApplication.prototype.download_stop = function () {
+    console.error("Not implemented, yet.");
+};
+
+UpdateTableApplication.prototype.on_download_started = function () {
+    console.log("Coming soon.");
 };
 
 function UpdateApplication() {
@@ -30,7 +57,7 @@ function UpdateApplication() {
             .end().find(".check_" + check_id)
                 .fadeIn();
         if (img) {
-            window.ua.update_image(img, true);
+            window.ua.update_image(img);
         }
     }
 
@@ -45,11 +72,7 @@ function UpdateApplication() {
         $(window.document).ajaxStart(function () {
             window.ua.update_image("/_shared/updater/images/spinner.apng");
         }).ajaxSuccess(function (event, xhr) {
-            window.setTimeout(function () {
-                // The wrapping here is not useless, because it prevents from
-                // supplying timeout codes.
-                window.ua.update_image();
-            }, 0);
+            window.ua.update_image();
         }).ajaxError(on_ajax_error);
     }
 
