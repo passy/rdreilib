@@ -66,8 +66,8 @@ figure.left { float: right; margin: 0 0 2em 2em; }
 #banner nav ul { list-style: none; margin: 0 auto; width: 800px; }
 #banner nav li { float: left; display: inline; margin: 0; }
 #banner nav a:link, #banner nav a:visited { color: #fff; display: inline-block; height: 30px; padding: 5px 1.5em; text-decoration: none; }
-#banner nav a:hover, #banner nav a:active { background: #C74451; color: #fff; text-shadow: none !important; }
-#banner nav .active a:link, #banner nav .active a:visited { background: #C74451; color: #fff; text-shadow: none !important; }
+#banner nav a:hover, #banner nav a:active { background: #c74350; color: #fff; text-shadow: none !important; }
+#banner nav .active a:link, #banner nav .active a:visited { background: #c74350; color: #fff; text-shadow: none !important; }
 #banner nav li:first-child a { border-top-left-radius: 5px; -moz-border-radius-topleft: 5px; -webkit-border-top-left-radius: 5px; border-bottom-left-radius: 5px; -moz-border-radius-bottomleft: 5px; -webkit-border-bottom-left-radius: 5px; }
 
 #featured { background: #fff; margin-bottom: 2em; overflow: hidden; padding: 20px; width: 760px; border-radius: 10px; -moz-border-radius: 10px; -webkit-border-radius: 10px; }
@@ -102,7 +102,7 @@ figure.left { float: right; margin: 0 0 2em 2em; }
 
 #about { background: #fff; font-style: normal; margin-bottom: 2em; overflow: hidden; padding: 20px; text-align: left; width: 760px; border-radius: 10px; -moz-border-radius: 10px; -webkit-border-radius: 10px; }
 #about .primary { float: left; width: 165px; }
-#about .primary strong { color: #C64350; display: block; font-size: 1.286em; }
+#about .primary strong { color: #c74350; display: block; font-size: 1.286em; }
 #about .photo { float: left; margin: 5px 20px; }
 #about .url:link, #about .url:visited { text-decoration: none; }
 #about .bio { float: right; width: 500px; }
@@ -164,6 +164,8 @@ li:hover .severity-4 { box-shadow: 0 0 10px white; -moz-box-shadow: 0 0 10px whi
 li:hover .severity-5 { box-shadow: 0 0 10px white; -moz-box-shadow: 0 0 10px white; -webkit-box-shadow: 0 0 10px white; color: black; }
 
 .minispin { width: 32px; height: 32px; }
+
+#error_data { color: #c74350; font-style: italic; }
 
 a.action { display: block; padding-left: 32px; line-height: 32px; background: transparent scroll 0 0 no-repeat; }
 a.action.download { background-image: url("/_shared/updater/images/actions/download.png"); }

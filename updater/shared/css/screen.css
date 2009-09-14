@@ -17,5 +17,7 @@ li:hover .severity-5 { box-shadow: 0 0 10px white; -moz-box-shadow: 0 0 10px whi
 
 .minispin { width: 32px; height: 32px; }
 
+#error_data { color: #c74350; font-style: italic; }
+
 a.action { display: block; padding-left: 32px; line-height: 32px; background: transparent scroll 0 0 no-repeat; }
 a.action.download { background-image: url("/_shared/updater/images/actions/download.png"); }
