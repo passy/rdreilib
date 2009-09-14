@@ -29,7 +29,8 @@ UPDATE_STATES = {
     'backup': 4,
     'patch': 5,
     'success': 10,
-    'failure': 20
+    'failure': 20,
+    'rollback': 30
 }
 
 class VersionLog(ModelBase):
@@ -48,10 +49,23 @@ class VersionLog(ModelBase):
     def __repr__(self):
         if self.id:
             return u"<VersionLog(%d, revision=%d, 'long_version='%s'"\
-                    ")>" (self.id, self.revision, self.long_version)
+                    ")>" % (self.id, self.revision, self.long_version)
 
         else:
             return u"<VersionLog(unsafed)>"
+
+    def clean_updatelog(self, keep_status=None):
+        """Removes all redundant update log entries. Used after a successful
+        installtion. The data is kept until than for in-depth debug
+        possibilities.
+
+        :param keep_status: A value of UPDATE_STATES that is *not* deleted.
+        :return: int, affected rows"""
+        keep_status = keep_status or UPDATE_STATES['success']
+        result = self.update_log.filter(UpdateLog.state!=keep_status).delete()
+
+        # TODO: Get affected rows. Consider using
+        # :class:``sqlalchemy.engine.base.ResultProxy``
 
 class UpdateLogQuery(orm.Query):
     def get_latest(self):
@@ -61,6 +75,16 @@ class UpdateLogQuery(orm.Query):
                 .first()
 
         return entry
+
+    def get_current(self, version):
+        """Get the most recent log entry for update to :class:``Version``.
+        :param: The version upgrading to."""
+        entry = self.filter(UpdateLog.version==version)\
+                .order_by(UpdateLog.updated.desc())\
+                .first()
+
+        return entry
+
 
 class UpdateLog(ModelBase):
     """Contains live data about current updating progress."""
@@ -76,6 +100,7 @@ class UpdateLog(ModelBase):
 
     _state = db.Column(db.SmallInteger)
     message = db.Column(db.Unicode(140))
+    progress = db.Column(db.Integer, default=-1)
 
     def _get_state(self):
         return self._state
@@ -94,10 +119,11 @@ class UpdateLog(ModelBase):
     state = orm.synonym('state', descriptor=property(_get_state,
                                                      _set_state))
 
-    def __init__(self, version, state, message=None):
+    def __init__(self, version, state, message=None, progress=-1):
         self.version = version
         self.state = state
         self.message = message and message or ''
+        self.progress = int(round(progress))
         self.updated = datetime.datetime.now()
 
     def __repr__(self):

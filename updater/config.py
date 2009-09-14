@@ -35,9 +35,7 @@ class UpdaterConfig(Configuration):
         config['general/version'] = (int, __version__)
 
         # Host settings
-        config['server/host'] = (str, str())
-        config['server/port'] = (int, 80)
-        config['server/path'] = (str, str())
+        config['server/url'] = (str, str())
 
         config['server/username'] = (str, str())
         config['server/password'] = (str, str())

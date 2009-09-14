@@ -9,14 +9,19 @@
  :license: GPL v3, see doc/LICENSE for more details.
  """
 
+from __future__ import division
+
 import yaml
-import httplib
+import urllib2
+from httplib import HTTPException
 import base64
 import tempfile
 import logging
 
 from os import path
-from version import __version__
+from .version import __version__
+from .models import UpdateLog, UPDATE_STATES
+from ..database import session
 
 
 log = logging.getLogger('rdreilib.updater.downloader')
@@ -26,21 +31,19 @@ class Downloader(object):
     PACKACKE_PATTERN = "update_%d.r3u"
     _repoyaml = None
 
-    def __init__(self, host, path, credentials=None, port=80, cache=None):
+    def __init__(self, url, credentials=None, cache=None):
         """Creates a download helper for a specific repository. The repository
         currently must be a WebDAV style http server with HTTP Basic
         authorization. Consider box.net for that.
 
-        :param host: Hostname like 'box.net'
-        :param path: Absolute path containing the root dir of up
+        :param url: Full URL including protocol, host name, port (optional) and
+            path. Like: http://box.net:80/webdav/myfolder
         :param credentials dict: A dictionary containing a ``username`` and
-                                ``password`` attribute.
+            ``password`` attribute.
         :param cache: Optional caching object to store yaml data in.
         """
 
-        self.host = host
-        self.path = path
-        self.port = port
+        self.url = url
         self.credentials = credentials
         self.cache = cache
 
@@ -50,6 +53,7 @@ class Downloader(object):
         on whether a Cache instance is present or not."""
         if self.cache is not None:
             if 'repoyaml' in self.cache:
+                log.debug("Using repoyaml from cache.")
                 return self.cache['repoyaml']
 
         return self._repoyaml
@@ -70,10 +74,8 @@ class Downloader(object):
             credentials = {'username': cfg['server/username'],
                            'password': cfg['server/password']}
         return cls(
-            cfg['server/host'],
-            cfg['server/path'],
+            cfg['server/url'],
             credentials,
-            cfg['server/port'],
             cache
         )
 
@@ -88,35 +90,120 @@ class Downloader(object):
                                         (self.credentials))
         return {'Authorization': "Basic %s" % base64str}
 
-    def _request(self, filename):
+    def _authorize_opener(self):
+        """Builds a :class:``urllib2.HTTPBasicAuthHandler`` upon
+        self.crendentials to build an opener from.
+
+        :return: urllib2 opener"""
+
+        password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+        password_mgr.add_password(None,
+                                  self.url,
+                                  self.credentials['username'],
+                                  self.credentials['password'])
+        auth_handler = urllib2.HTTPBasicAuthHandler(password_mgr)
+        return urllib2.build_opener(auth_handler)
+
+    def _request(self, filename, track=None):
         """Opens a request to the server, sends credentials if provided and
         fetches the file.
 
         :param filename: Filename relative to ``self.repo_url``.
+        :param track: (opt.) An instance of :class:``updater.models.VersionLog``
+            to be updated on regular base for the progress of the download.
 
-        :return: string"""
+        :return: string
+        """
 
-        http = httplib.HTTPConnection(self.host, self.port)
-        http.request('GET', "http://%s/%s/%s" % (self.host, self.path,
-                                                 filename),
-                     headers=self._authorize_headers())
-        response = http.getresponse()
-        if response.status != 200:
-            raise httplib.HTTPException("Server responded with code %d" % \
-                                        response.status)
+        # We constantly track the status of this function if track is enabled.
+        self._track(track, 0, "Resolving host")
+        # Build the full url including the path
+        request = urllib2.Request(self.url+"/"+filename)
+        # Add a User agent just for fun.
+        request.add_header('User-agent', "rDREI updater v%s" % __version__)
+
+        # This allows us to use basic authentication
+        opener = self._authorize_opener()
+
+        # Track all kinds of HTTP Errors, including 404
+        try:
+            # XXX: The timeout is fixed. This could be placed in the config.
+            http = opener.open(request, None, 10)
+        except IOError as err:
+            self._track(track, -1, "Download failed with error: %s" % err,
+                        'failure')
+            raise
+
+        # Check the status code, but be aware of stupid services like OpenDNS
+        # not raising a NX_DOMAIN, but a redirection.
+        status = http.getcode()
+        if status != 200:
+            self._track(track, -1, "Download server returned status %d" % status,
+                        'failure')
+            raise HTTPException("Server responded with code %d" % \
+                                        status)
+        # Track the OpenDNS case here
+        if http.url != request.get_full_url():
+            self._track(track, -1, "Got an unexpected redirection. Probably a "
+                        "misconfigured DNS server.",
+                       'failure')
+            raise HTTPException("Server not found.")
+
         resp_str = str()
+        try:
+            content_len = int(http.headers.get('Content-length', 0))
+        except ValueError:
+            self._track(track, -1, "Invalid Content-Length received!")
+            raise HTTPException("Invalid headers received!",
+                               'failure')
 
+        self._track(track, 0, "Initializing download")
         while True:
-            text = response.read(2048)
+            text = http.read(2048)
             if not text:
                 break
+            # Calculate download progress
+            prog = (len(resp_str)/content_len)*100
+            self._track(track, prog, "Download in progress")
             resp_str += text
+
+        # Check if the download was complete.
+        if len(resp_str) != content_len:
+            self._track(track, -1, "Download incomplete.",
+                       'failure')
+            raise HTTPException("Content-Length does not match downloaded "
+                                "size.")
 
         return resp_str
 
+    def _track(self, version, progress, message, state=None):
+        """Tracks the progress of a download action.
+        :param version: An instance of :class:``updater.models.VersionLog``
+        :param progress: An integer, usually a percent value.
+        :param message: Message for the version log entry.
+        :param state: Optional state. Defaults to 'downloading'.
+        """
+        if state is not None:
+            state = UPDATE_STATES[state]
+        else:
+            state = UPDATE_STATES['download']
+
+        log.debug("Tracking download state at progress=%d, message=%r, state=%d"
+                  % (progress, message, state))
+
+        if version is None:
+            # This is needed for saving to database, but can be omitted to just
+            # dump to log.
+            return
+
+        ul = UpdateLog(version, "Downloading",
+                       progress)
+        session.add(ul)
+        session.commit()
+
     def get_repo_meta(self):
         """Fetches and parses the meta data on the server."""
-        if self.repoyaml is None:
+        if self.repoyaml is not None:
             log.debug("Requesting repository yaml data.")
             repometa = self._request("repository.yaml")
             self.repoyaml = yaml.load(repometa)

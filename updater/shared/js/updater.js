@@ -1,15 +1,25 @@
 /**
  * updater
- * ~~~~~~~~~~~
+ * ~~~~~~~
  * Main javascript file for the updater application.
  *
  * :copyright: date, Pascal Hartig <phartig@rdrei.net>
  * :license: GPL v3, see doc/LICENSE for more details.
  */
 
-/*global $ */
-/*jslint white: true, onevar: true, browser: true, undef: true, nomen: true, eqeqeq: true, plusplus: true, bitwise: true, regexp: true, strict: true, newcap: true */
+/*global $, window */
+/*jslint white: true, onevar: true, browser: true, undef: true, nomen: true, eqeqeq: true, plusplus: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true */
 "use strict";
+
+function UpdateTableApplication() {
+    // Not actually a html table, but it contains data in kind of a grid.
+    this.$table = $("#posts-list");
+    this.$table.find(".action.download").click(this.download);
+}
+
+UpdateTableApplication.prototype.download = function () {
+
+};
 
 function UpdateApplication() {
 
@@ -20,7 +30,7 @@ function UpdateApplication() {
             .end().find(".check_" + check_id)
                 .fadeIn();
         if (img) {
-            window.ua.update_image(img);
+            window.ua.update_image(img, true);
         }
     }
 
@@ -39,12 +49,16 @@ function UpdateApplication() {
                 // The wrapping here is not useless, because it prevents from
                 // supplying timeout codes.
                 window.ua.update_image();
-            }, 100);
+            }, 0);
         }).ajaxError(on_ajax_error);
     }
 
+    function on_table_load() {
+        window.uta = new UpdateTableApplication();
+    }
+
     function load_update_table(count) {
-        $("#content").load("ajax/update_skeleton").fadeIn();
+        $("#content").load("ajax/update_skeleton", on_table_load).fadeIn();
         $("#update_count").text(count);
         update_check(1, "/_shared/updater/images/updates_available.png");
     }
