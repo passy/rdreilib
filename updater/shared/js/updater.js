@@ -19,15 +19,16 @@ function UpdateTableApplication() {
 
 UpdateTableApplication.prototype.download_start = function () {
     // TODO: CSRF
-    var $this = $(this);
-    var download_id = $this.attr('id').split('start_download_')[1];
+    var $this, download_id;
+    $this = $(this);
+    download_id = $this.attr('id').split('start_download_')[1];
     $.post("ajax/download/start", {
         revision: download_id
     }, window.uta.on_download_started, 'json');
     // Replace the download button with a status bar.
     $this.click(window.uta.download_stop).text("Cancel").after(
-        $("<div>").hide().attr('id', 'download_progressbar_'+download_id).progressbar({
-            value: 50
+        $("<div>").hide().attr('id', 'download_progressbar_' + download_id).progressbar({
+            value: 0
         }).effect('drop', {mode: 'show'})
     );
     // TODO: Disable other downloads or allow them in the downloads controller
@@ -36,8 +37,22 @@ UpdateTableApplication.prototype.download_start = function () {
     // in order to install later ones.
 };
 
+UpdateTableApplication.prototype.request_download_update = function (download_id) {
+    $.getJSON("ajax/download/status", window.uta.update_download_step);
+};
+
 UpdateTableApplication.prototype.update_download_step = function (download_id, progress) {
-    $("#download_progressbar_"+download_id).animate({width: progress+"%"});
+    $("#download_progressbar_" + download_id)
+        .animate({width: progress + "%"})
+        .attr('title', "Download progress: "+progress+"%");
+    if(progress == 100) {
+        // Update stuff.
+    } else {
+        // Continue updating the old school way until we enable comet. (:
+        // 500ms seems low, but this is supposed to be local and we
+        // create db entries every downloaded block, so why not?
+        window.setTimeout(window.uta.request_download_update, 500);
+    }
 };
 
 UpdateTableApplication.prototype.download_stop = function () {

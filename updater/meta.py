@@ -16,7 +16,8 @@ import hashlib
 import copy
 import os
 
-from package import Package, PackageCreator
+from .package import Package, PackageCreator
+from .dependency import Dependency
 
 from os.path import join, dirname
 from tempfile import NamedTemporaryFile
@@ -24,6 +25,7 @@ from tempfile import NamedTemporaryFile
 class Meta(object):
     REQUIRED_FIELDS = (
         'version.revision',
+        'dependencies',
         'meta.email',
         'meta.fingerprint',
         'meta.hash',
@@ -77,6 +79,15 @@ class Meta(object):
         self._verify_hash()
         if signature:
             self._verify_signature()
+        self.check_dependencies()
+
+    def check_dependencies(self):
+        """Check for the dependencies listed in the configuration meta."""
+        for key, value in self.meta.get('dependencies', ()).iteritems():
+            dep = Dependency.get_instance(key, value)
+            if not dep.check():
+                raise MetaDependencyError("Dependency not matched: %r: %r." %
+                                          (key, value))
 
     def _get_package(self):
         """Returns a read-only file objects of the referenced package."""
@@ -191,4 +202,7 @@ class MetaConfigError(Exception):
     pass
 
 class MetaIntegrityError(Exception):
+    pass
+
+class MetaDependencyError(Exception):
     pass

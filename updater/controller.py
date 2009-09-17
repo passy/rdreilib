@@ -14,7 +14,7 @@ from .models import VersionLog, UpdateLog
 
 from glashammer.utils.local import local, get_app
 from ..controller import BaseController
-from ..jsonlib import json_view
+from ..jsonlib import json_view, JSONException
 
 import datetime
 import logging
@@ -38,7 +38,11 @@ class UpdateController(BaseController):
                                       req.cache.get_cache('downloader', expire=300))
 
     def _get_current(self):
-        return UpdateLog.query.get_latest().version.revision
+        try:
+            return UpdateLog.query.get_latest().version.revision
+        except AttributeError:
+            raise RuntimeError("Database is not prepared. Run "
+                               "manage.py initdb!")
 
     @json_view
     def ajax_check_update(self, req):
@@ -49,7 +53,6 @@ class UpdateController(BaseController):
         return [rev, cur]
 
     def ajax_update_skeleton(self, req):
-        # TODO: Get this from session or cache
         cur = self._get_current()
         repometa = self._get_downloader(req).get_repo_meta()
         diff = (self._get_downloader(req).get_version()-cur)
@@ -77,7 +80,9 @@ class UpdateController(BaseController):
         """Starts a new download. Checks whether requested revision is not
         already applied or a upgrade to this version is already in progress.
         :param req.POST['revision']: Integer of the revision to install."""
-        #TODO: Stub
+        if 'revision' not in req.form:
+            raise JSONException("Insufficient parameters!")
+
+        downloader = self._get_downloader(req)
+
         return {'success': {'message': "Download started."}}
-
-
