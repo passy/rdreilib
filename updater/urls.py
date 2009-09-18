@@ -18,6 +18,7 @@ def make_urls():
         Rule('/ajax/check_update', endpoint='updater/ajax_check_update'),
         Rule('/ajax/update_skeleton', endpoint='updater/ajax_update_skeleton'),
         Rule('/ajax/download/start', endpoint='updater/ajax_start_download'),
+        Rule('/ajax/download/status/<int:revision>', endpoint='updater/ajax_status_download'),
     ]
 
 __all__ = ('make_urls')

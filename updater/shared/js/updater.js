@@ -15,6 +15,7 @@ function UpdateTableApplication() {
     // Not actually a html table, but it contains data in kind of a grid.
     this.$table = $("#posts-list");
     this.$table.find(".action.download").one('click', this.download_start);
+    this.downloads = {};
 }
 
 UpdateTableApplication.prototype.download_start = function () {
@@ -24,7 +25,7 @@ UpdateTableApplication.prototype.download_start = function () {
     download_id = $this.attr('id').split('start_download_')[1];
     $.post("ajax/download/start", {
         revision: download_id
-    }, window.uta.on_download_started, 'json');
+    }, window.uta.on_download_ended, 'json');
     // Replace the download button with a status bar.
     $this.click(window.uta.download_stop).text("Cancel").after(
         $("<div>").hide().attr('id', 'download_progressbar_' + download_id).progressbar({
@@ -35,23 +36,31 @@ UpdateTableApplication.prototype.download_start = function () {
     // as well and only make upgrades exclusive. I think this is not really
     // useful. It would be better to make installing previous updates necessary
     // in order to install later ones.
+    window.uta.request_download_update(download_id);
 };
 
 UpdateTableApplication.prototype.request_download_update = function (download_id) {
-    $.getJSON("ajax/download/status", window.uta.update_download_step);
+    $.getJSON("ajax/download/status/"+download_id, function (data) {
+        window.uta.update_download_step(download_id, data);
+    });
 };
 
-UpdateTableApplication.prototype.update_download_step = function (download_id, progress) {
-    $("#download_progressbar_" + download_id)
-        .animate({width: progress + "%"})
-        .attr('title', "Download progress: "+progress+"%");
-    if(progress == 100) {
+UpdateTableApplication.prototype.update_download_step = function (download_id, data) {
+    var progress = data['progress'];
+    var $bar_value = $("#download_progressbar_" + download_id+" .ui-progressbar-value");
+    if($bar_value.css("width") !== progress + "%") {
+        $bar_value.animate({width: progress + "%"})
+            .attr('title', "Download progress: " + progress + "%");
+    }
+    if (progress === 100) {
         // Update stuff.
     } else {
         // Continue updating the old school way until we enable comet. (:
         // 500ms seems low, but this is supposed to be local and we
         // create db entries every downloaded block, so why not?
-        window.setTimeout(window.uta.request_download_update, 500);
+        window.setTimeout(function () {
+            window.uta.request_download_update(download_id);
+        }, 500);
     }
 };
 
@@ -59,7 +68,7 @@ UpdateTableApplication.prototype.download_stop = function () {
     console.error("Not implemented, yet.");
 };
 
-UpdateTableApplication.prototype.on_download_started = function () {
+UpdateTableApplication.prototype.on_download_ended = function () {
     console.log("Coming soon.");
 };
 

@@ -20,7 +20,7 @@ import logging
 
 from os import path
 from .version import __version__
-from .models import UpdateLog, UPDATE_STATES
+from .models import UpdateLog, UPDATE_STATES, VersionLog
 from ..database import session
 
 
@@ -104,13 +104,16 @@ class Downloader(object):
         auth_handler = urllib2.HTTPBasicAuthHandler(password_mgr)
         return urllib2.build_opener(auth_handler)
 
-    def _request(self, filename, track=None):
+    def _request(self, filename, track=None, buffer=None):
         """Opens a request to the server, sends credentials if provided and
         fetches the file.
 
         :param filename: Filename relative to ``self.repo_url``.
         :param track: (opt.) An instance of :class:``updater.models.VersionLog``
             to be updated on regular base for the progress of the download.
+        :param buffer: For large files, it is useful to directly write to a
+            buffer instead of using memory as a cache. This parameter accepts a
+            file-like object with a write method.
 
         :return: string
         """
@@ -150,6 +153,7 @@ class Downloader(object):
             raise HTTPException("Server not found.")
 
         resp_str = str()
+        cur_len = 0
         try:
             content_len = int(http.headers.get('Content-length', 0))
         except ValueError:
@@ -163,12 +167,16 @@ class Downloader(object):
             if not text:
                 break
             # Calculate download progress
-            prog = (len(resp_str)/content_len)*100
+            cur_len += len(text)
+            prog = (cur_len/content_len)*100
             self._track(track, prog, "Download in progress")
-            resp_str += text
+            if buffer is None:
+                resp_str += text
+            else:
+                buffer.write(text)
 
         # Check if the download was complete.
-        if len(resp_str) != content_len:
+        if cur_len != content_len:
             self._track(track, -1, "Download incomplete.",
                        'failure')
             raise HTTPException("Content-Length does not match downloaded "
@@ -196,7 +204,7 @@ class Downloader(object):
             # dump to log.
             return
 
-        ul = UpdateLog(version, "Downloading",
+        ul = UpdateLog(version, state, "Downloading",
                        progress)
         session.add(ul)
         session.commit()
@@ -231,16 +239,20 @@ class Downloader(object):
 
         filename = self.PACKACKE_PATTERN % revision
 
+        # Create a new version log entry. Long version is updated after the
+        # download is finished and meta is validated.
+        vlog = VersionLog(revision)
+
         # Open the output file.
         if destination:
             if path.isdir(destination):
-                out = tempfile.NamedTempFile(delete=False, dir=destination)
+                out = tempfile.NamedTemporaryFile(delete=False, dir=destination)
             else:
                 out = open(destination, 'wb')
         else:
-            out = tempfile.NamedTempFile(delete=False)
+            out = tempfile.NamedTemporaryFile(delete=False)
 
-        out.write(self._request(filename))
+        self._request(filename, buffer=out, track=vlog)
 
         return out.name
 

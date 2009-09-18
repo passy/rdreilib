@@ -39,17 +39,18 @@ class VersionLog(ModelBase):
     __tablename__ = "updater_versionlog"
     id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     revision = db.Column(db.Integer, unique=True)
-    long_version = db.Column(db.Unicode(15), unique=True)
+    long_version = db.Column(db.Unicode(15), nullable=True, unique=True)
 
 
-    def __init__(self, revision, long_version):
+    def __init__(self, revision, long_version=None):
         self.revision = revision
         self.long_version = long_version
 
     def __repr__(self):
         if self.id:
             return u"<VersionLog(%d, revision=%d, 'long_version='%s'"\
-                    ")>" % (self.id, self.revision, self.long_version)
+                    ")>" % (self.id, self.revision,
+                            self.long_version or 'unknown')
 
         else:
             return u"<VersionLog(unsafed)>"
@@ -114,7 +115,7 @@ class UpdateLog(ModelBase):
 
         else:
             raise ValueError("State must be an integer or string specified "
-                             " in UPDATE_STATES!")
+                             "in UPDATE_STATES, not %r!" % value)
 
     state = orm.synonym('state', descriptor=property(_get_state,
                                                      _set_state))

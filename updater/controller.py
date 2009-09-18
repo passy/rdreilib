@@ -80,9 +80,28 @@ class UpdateController(BaseController):
         """Starts a new download. Checks whether requested revision is not
         already applied or a upgrade to this version is already in progress.
         :param req.POST['revision']: Integer of the revision to install."""
+
         if 'revision' not in req.form:
             raise JSONException("Insufficient parameters!")
 
-        downloader = self._get_downloader(req)
+        # May raise an exception.
+        revision = int(req.form['revision'])
 
-        return {'success': {'message': "Download started."}}
+        downloader = self._get_downloader(req)
+        #FIXME: Validate revision!
+        downloader.download_package(revision)
+
+        return {'success': {'message': "Download ended."}}
+
+    @json_view
+    def ajax_status_download(self, req, revision):
+        """Checks for current download's progress."""
+
+        rev_object = VersionLog.query.filter_by(revision=revision).one()
+        #TODO: Catch misses
+        ulog = UpdateLog.query.get_current(rev_object)
+        return {'revision': revision,
+                'date': ulog.updated.strftime(r"%d.%m.%Y"),
+                'progress': ulog.progress,
+                'message': ulog.message,
+                'state': ulog.state}
