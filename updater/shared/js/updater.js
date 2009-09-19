@@ -40,18 +40,20 @@ UpdateTableApplication.prototype.download_start = function () {
 };
 
 UpdateTableApplication.prototype.request_download_update = function (download_id) {
-    $.getJSON("ajax/download/status/"+download_id, function (data) {
+    $.getJSON("ajax/download/status/" + download_id, function (data) {
         window.uta.update_download_step(download_id, data);
     });
 };
 
 UpdateTableApplication.prototype.update_download_step = function (download_id, data) {
-    var progress = data['progress'];
-    var $bar_value = $("#download_progressbar_" + download_id+" .ui-progressbar-value");
-    if($bar_value.css("width") !== progress + "%") {
-        $bar_value.animate({width: progress + "%"})
-            .attr('title', "Download progress: " + progress + "%");
+    if ('error' in data) {
+        return window.ua.on_ajax_error(data);
     }
+    var progress, $bar;
+    progress = data.progress;
+    $bar = $("#download_progressbar_" + download_id);
+    $bar.progressbar('value', progress);
+
     if (progress === 100) {
         // Update stuff.
     } else {
@@ -68,28 +70,21 @@ UpdateTableApplication.prototype.download_stop = function () {
     console.error("Not implemented, yet.");
 };
 
-UpdateTableApplication.prototype.on_download_ended = function () {
+UpdateTableApplication.prototype.on_download_ended = function (data) {
+    if ('error' in data) {
+        return window.ua.on_ajax_error(data);
+    }
     console.log("Coming soon.");
 };
 
 function UpdateApplication() {
 
     function update_check(check_id, img) {
-        $("#check")
-            .find("div")
-                .hide()
-            .end().find(".check_" + check_id)
-                .fadeIn();
-        if (img) {
-            window.ua.update_image(img);
-        }
+        return window.ua.update_check(check_id, img);
     }
 
     function on_ajax_error(data) {
-        update_check(3, "/_shared/updater/images/error_box.png");
-        if (data) {
-            $("#error_data").text(data.error);
-        }
+        return window.ua.on_ajax_error(data);
     }
 
     function bind_spinner() {
@@ -142,4 +137,22 @@ UpdateApplication.prototype.update_image = function (img, instant) {
     }
 
     $el.attr('src', img).data('old_src', old);
+};
+
+UpdateApplication.prototype.on_ajax_error = function (data) {
+    window.ua.update_check(3, "/_shared/updater/images/error_box.png");
+    if (data) {
+        $("#error_data").text(data.error);
+    }
+};
+
+UpdateApplication.prototype.update_check = function (check_id, img) {
+    $("#check")
+        .find("div")
+            .hide()
+        .end().find(".check_" + check_id)
+            .fadeIn();
+    if (img) {
+        window.ua.update_image(img);
+    }
 };

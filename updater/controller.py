@@ -18,6 +18,8 @@ from ..jsonlib import json_view, JSONException
 
 import datetime
 import logging
+import os
+import shutil
 
 
 log = logging.getLogger('rdreilib.updater.controller')
@@ -87,11 +89,23 @@ class UpdateController(BaseController):
         # May raise an exception.
         revision = int(req.form['revision'])
 
+        # Check the download folder exists
+        path = self.config['files/download_path']
+        if not os.path.exists(path):
+            raise OSError("Download path %r does not exist." % path)
+        if not os.path.isdir(path):
+            raise OSError("Download path %r is not a directory." % path)
+
         downloader = self._get_downloader(req)
         #FIXME: Validate revision!
-        downloader.download_package(revision)
+        file = downloader.download_package(revision)
+        fullpath = os.path.join(path, downloader.PACKACKE_PATTERN % revision)
 
-        return {'success': {'message': "Download ended."}}
+        # Download is done, move to download dir. Can fail, but the exception is
+        # informative enough.
+        shutil.move(file, fullpath)
+
+        return {'success': {'message': "Download ended. Saved to %r." % fullpath}}
 
     @json_view
     def ajax_status_download(self, req, revision):

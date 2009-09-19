@@ -24,10 +24,11 @@ log = logging.getLogger("rdreilib.updater.models")
 UPDATE_STATES = {
     'pending': 0,
     'download': 1,
-    'verify': 2,
-    'unpack': 3,
-    'backup': 4,
-    'patch': 5,
+    'download_success': 2,
+    'verify': 3,
+    'unpack': 4,
+    'backup': 5,
+    'patch': 6,
     'success': 10,
     'failure': 20,
     'rollback': 30

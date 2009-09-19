@@ -13,12 +13,13 @@ from __future__ import division
 
 import yaml
 import urllib2
-from httplib import HTTPException
 import base64
 import tempfile
 import logging
+import time
 
 from os import path
+from httplib import HTTPException
 from .version import __version__
 from .models import UpdateLog, UPDATE_STATES, VersionLog
 from ..database import session
@@ -30,6 +31,7 @@ log = logging.getLogger('rdreilib.updater.downloader')
 class Downloader(object):
     PACKACKE_PATTERN = "update_%d.r3u"
     _repoyaml = None
+
 
     def __init__(self, url, credentials=None, cache=None):
         """Creates a download helper for a specific repository. The repository
@@ -46,6 +48,11 @@ class Downloader(object):
         self.url = url
         self.credentials = credentials
         self.cache = cache
+
+        # Tracks current download's progress as rounded int in percent.
+        self.last_progress = 0
+        # Last DB write for tracking
+        self.last_track = 0
 
     @property
     def repoyaml(self):
@@ -161,14 +168,14 @@ class Downloader(object):
             raise HTTPException("Invalid headers received!",
                                'failure')
 
-        self._track(track, 0, "Initializing download")
+        self._track(track, 0, u"Initializing download")
         while True:
-            text = http.read(2048)
+            text = http.read(4096)
             if not text:
                 break
             # Calculate download progress
             cur_len += len(text)
-            prog = (cur_len/content_len)*100
+            prog = round((cur_len/content_len)*100)
             self._track(track, prog, "Download in progress")
             if buffer is None:
                 resp_str += text
@@ -176,8 +183,11 @@ class Downloader(object):
                 buffer.write(text)
 
         # Check if the download was complete.
-        if cur_len != content_len:
-            self._track(track, -1, "Download incomplete.",
+        if cur_len == content_len:
+            self._track(track, 100, u"Download complete.",
+                       'download_success')
+        else:
+            self._track(track, -1, u"Download incomplete.",
                        'failure')
             raise HTTPException("Content-Length does not match downloaded "
                                 "size.")
@@ -191,6 +201,13 @@ class Downloader(object):
         :param message: Message for the version log entry.
         :param state: Optional state. Defaults to 'downloading'.
         """
+        if progress == 'download' and (\
+               progress == self.last_progress or\
+               (0 < (self.last_track-time.time()) < 2)
+            ):
+            # Spam protection
+            return
+
         if state is not None:
             state = UPDATE_STATES[state]
         else:
@@ -199,12 +216,16 @@ class Downloader(object):
         log.debug("Tracking download state at progress=%d, message=%r, state=%d"
                   % (progress, message, state))
 
+        # Update internal progress tracker.
+        self.last_progress = progress
+        self.last_track = time.time()
+
         if version is None:
             # This is needed for saving to database, but can be omitted to just
             # dump to log.
             return
 
-        ul = UpdateLog(version, state, "Downloading",
+        ul = UpdateLog(version, state, message,
                        progress)
         session.add(ul)
         session.commit()

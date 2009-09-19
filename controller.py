@@ -79,4 +79,3 @@ class BaseController(object):
 
         return flash
 
-

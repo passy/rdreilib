@@ -40,4 +40,7 @@ class UpdaterConfig(Configuration):
         config['server/username'] = (str, str())
         config['server/password'] = (str, str())
 
+        # Path settings
+        config['files/download_path'] = (str, '/tmp/updater/download')
+
         self.config_vars.update(config)
