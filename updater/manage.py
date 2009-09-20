@@ -55,6 +55,11 @@ def action_initdb(revision=('r', '1')):
     session.add(ul_entry)
     session.commit()
 
+def action_dropdb():
+    """This removes all updater-related tables from the database."""
+    VersionLog.__table__.drop(bind=session.connection().engine)
+    UpdateLog.__table__.drop(bind=session.connection().engine)
+
 def _build_meta(config):
     """Creates required signatures and hashes."""
 

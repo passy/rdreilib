@@ -36,7 +36,11 @@ UpdateTableApplication.prototype.download_start = function () {
     // as well and only make upgrades exclusive. I think this is not really
     // useful. It would be better to make installing previous updates necessary
     // in order to install later ones.
-    window.uta.request_download_update(download_id);
+
+    // Time to settle request.
+    window.setTimeout(function () {
+        window.uta.request_download_update(download_id);
+    }, 1000);
 };
 
 UpdateTableApplication.prototype.request_download_update = function (download_id) {

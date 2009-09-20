@@ -10,12 +10,14 @@ Persistance layer for R3U
 
 import sqlalchemy as db
 from sqlalchemy import orm
+from werkzeug.utils import cached_property
 
 from ..database import ModelBase, session
 from ..p2lib import P2Mixin
 
 import logging
 import datetime
+import os
 
 
 log = logging.getLogger("rdreilib.updater.models")
@@ -24,28 +26,32 @@ log = logging.getLogger("rdreilib.updater.models")
 UPDATE_STATES = {
     'pending': 0,
     'download': 1,
-    'download_success': 2,
-    'verify': 3,
-    'unpack': 4,
-    'backup': 5,
-    'patch': 6,
+    'verify': 2,
+    'unpack': 3,
+    'backup': 4,
+    'patch': 5,
     'success': 10,
     'failure': 20,
     'rollback': 30
 }
 
+PACKACKE_PATTERN = "update_%d.r3u"
+
+
 class VersionLog(ModelBase):
     """Stores information on installed versions and their installation state."""
 
     __tablename__ = "updater_versionlog"
+    __mapper_args = {'polymorphic_identity': 'updater_versionlog'}
     id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     revision = db.Column(db.Integer, unique=True)
     long_version = db.Column(db.Unicode(15), nullable=True, unique=True)
 
 
-    def __init__(self, revision, long_version=None):
+    def __init__(self, revision, long_version=None, state='pending'):
         self.revision = revision
         self.long_version = long_version
+        self.state = state
 
     def __repr__(self):
         if self.id:
@@ -55,6 +61,11 @@ class VersionLog(ModelBase):
 
         else:
             return u"<VersionLog(unsafed)>"
+
+    @cached_property
+    def update(self):
+        """Get the last entry of :class:``UpdateLog`` for this version entry."""
+        return self.update_log.order_by('-id').limit(1).first()
 
     def clean_updatelog(self, keep_status=None):
         """Removes all redundant update log entries. Used after a successful
@@ -69,11 +80,21 @@ class VersionLog(ModelBase):
         # TODO: Get affected rows. Consider using
         # :class:``sqlalchemy.engine.base.ResultProxy``
 
+    def get_package(self, path):
+        """Get the pacakge path for this version if it exists or ``None``.
+
+        :param path: Path to download folder.
+        """
+        fullpath = os.path.join(path, PACKACKE_PATTERN % self.revision)
+        if os.path.exists(fullpath):
+            return fullpath
+
+
 class UpdateLogQuery(orm.Query):
     def get_latest(self):
         """Get the latest successful installed version."""
         entry = self.filter(UpdateLog._state==UPDATE_STATES['success'])\
-                .order_by(UpdateLog.updated.desc())\
+                .order_by(UpdateLog.id.desc())\
                 .first()
 
         return entry
@@ -98,14 +119,29 @@ class UpdateLog(ModelBase):
     version_id = db.Column(db.Integer, db.ForeignKey('updater_versionlog.id',
                                                      ondelete="CASCADE"))
     updated = db.Column(db.DateTime)
-    version = orm.relation(VersionLog, backref='update_log')
+    version = orm.relation(VersionLog, backref=orm.backref(
+            'update_log',
+            lazy='dynamic',
+        ),
+        cascade='all')
 
-    _state = db.Column(db.SmallInteger)
     message = db.Column(db.Unicode(140))
     progress = db.Column(db.Integer, default=-1)
+    _state = db.Column(db.SmallInteger)
+
+    def __init__(self, version, state, message=None, progress=-1):
+        self.version = version
+        self.state = state
+        self.message = message and message or ''
+        self.progress = int(round(progress))
+        self.updated = datetime.datetime.now()
+
+    def __repr__(self):
+        return u"<UpdateLog(%d, '%s')>" % (self.state, self.message)
 
     def _get_state(self):
-        return self._state
+        index = UPDATE_STATES.values().index(self._state)
+        return UPDATE_STATES.keys()[index]
 
     def _set_state(self, value):
         if value in UPDATE_STATES.values():
@@ -118,17 +154,5 @@ class UpdateLog(ModelBase):
             raise ValueError("State must be an integer or string specified "
                              "in UPDATE_STATES, not %r!" % value)
 
-    state = orm.synonym('state', descriptor=property(_get_state,
+    state = orm.synonym('_state', descriptor=property(_get_state,
                                                      _set_state))
-
-    def __init__(self, version, state, message=None, progress=-1):
-        self.version = version
-        self.state = state
-        self.message = message and message or ''
-        self.progress = int(round(progress))
-        self.updated = datetime.datetime.now()
-
-    def __repr__(self):
-        return u"<UpdateLog(%d, '%s')>" % (self.state, self.message)
-
-

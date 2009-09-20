@@ -22,6 +22,7 @@ from os import path
 from httplib import HTTPException
 from .version import __version__
 from .models import UpdateLog, UPDATE_STATES, VersionLog
+from .models import PACKACKE_PATTERN
 from ..database import session
 
 
@@ -29,7 +30,6 @@ log = logging.getLogger('rdreilib.updater.downloader')
 
 
 class Downloader(object):
-    PACKACKE_PATTERN = "update_%d.r3u"
     _repoyaml = None
 
 
@@ -126,7 +126,7 @@ class Downloader(object):
         """
 
         # We constantly track the status of this function if track is enabled.
-        self._track(track, 0, "Resolving host")
+        self._track(track, 0, "Resolving host", 'pending')
         # Build the full url including the path
         request = urllib2.Request(self.url+"/"+filename)
         # Add a User agent just for fun.
@@ -185,7 +185,7 @@ class Downloader(object):
         # Check if the download was complete.
         if cur_len == content_len:
             self._track(track, 100, u"Download complete.",
-                       'download_success')
+                       'verify')
         else:
             self._track(track, -1, u"Download incomplete.",
                        'failure')
@@ -201,17 +201,18 @@ class Downloader(object):
         :param message: Message for the version log entry.
         :param state: Optional state. Defaults to 'downloading'.
         """
-        if progress == 'download' and (\
-               progress == self.last_progress or\
-               (0 < (self.last_track-time.time()) < 2)
-            ):
-            # Spam protection
-            return
 
         if state is not None:
             state = UPDATE_STATES[state]
         else:
             state = UPDATE_STATES['download']
+
+        if state == UPDATE_STATES['download'] and (\
+               progress == self.last_progress or\
+               (0 < (self.last_track-time.time()) < 2)
+            ):
+            # Spam protection
+            return
 
         log.debug("Tracking download state at progress=%d, message=%r, state=%d"
                   % (progress, message, state))
@@ -225,8 +226,13 @@ class Downloader(object):
             # dump to log.
             return
 
+        # Update the VersionLog state first. (It's commited later, however.)
+        if state != version.state:
+            version.state = state
+
         ul = UpdateLog(version, state, message,
                        progress)
+
         session.add(ul)
         session.commit()
 
@@ -258,7 +264,7 @@ class Downloader(object):
 
         :return: Absolute path of downloaded package."""
 
-        filename = self.PACKACKE_PATTERN % revision
+        filename = PACKACKE_PATTERN % revision
 
         # Create a new version log entry. Long version is updated after the
         # download is finished and meta is validated.

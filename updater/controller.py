@@ -77,6 +77,15 @@ class UpdateController(BaseController):
         return self.render("update_list.html", _path="partials",
                            update_list=updates)
 
+    def list(self, req):
+        """Lists locally available updates i.e. after download."""
+        #TODO: Consider accepting parameter to automatically start verifying
+        # downloads.
+        versions = VersionLog.query.order_by(VersionLog.id.desc()).all()
+        object_list = list()
+
+        return self.render("list.html", version_list=versions)
+
     @json_view
     def ajax_start_download(self, req):
         """Starts a new download. Checks whether requested revision is not
