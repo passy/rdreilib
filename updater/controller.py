@@ -11,6 +11,7 @@
 
 from .downloader import Downloader
 from .models import VersionLog, UpdateLog
+from r3upackage import R3UPackage
 
 from glashammer.utils.local import local, get_app
 from ..controller import BaseController
@@ -128,3 +129,27 @@ class UpdateController(BaseController):
                 'progress': ulog.progress,
                 'message': ulog.message,
                 'state': ulog.state}
+
+    @json_view
+    def ajax_verify(self, req, revision):
+        """Verifies the package's integrity."""
+
+        rev_object = VersionLog.query.filter_by(revision=revision).one()
+        #TODO: Again, catch misses and refactor.
+        ulog = UpdateLog.query.get_current(rev_object)
+        if ulog.state != 'verify':
+            raise JSONException("Package not in expected state.")
+
+        package_file = rev_object.get_package(self.config['files/download_path'])
+        if package_file is None:
+            #TODO: Ask to delete this entry!
+            raise JSONException("Package not found!")
+
+        #! Can already raise an exception if not a valid archive.
+        r3u = R3UPackage(package_file)
+        #! This will raise exceptions if it does not validate.
+        if r3u.check():
+            #TODO: Save new state!
+            return {'success': {
+                'message': "Package seems to be valid."
+            }}

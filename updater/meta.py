@@ -67,11 +67,20 @@ class Meta(object):
         """Checks for required data in config, but only on two dimensions."""
         # Iterate through all required fields and check if they are present.
         for field in self.REQUIRED_FIELDS:
-            key1, key2 = field.split('.')
             try:
-                self.data[key1][key2]
-            except KeyError:
-                raise MetaConfigError("Required field '%s' missing!" % field)
+                key1, key2 = field.split('.')
+            except ValueError:
+                # Fall back to a one-value check.
+                try:
+                    self.data[key1]
+                except KeyError:
+                    raise MetaConfigError("Required section '%s' missing!" %
+                                          field)
+            else:
+                try:
+                    self.data[key1][key2]
+                except KeyError:
+                    raise MetaConfigError("Required field '%s' missing!" % field)
 
     def check(self, signature=True):
         """Performs verious checks to verify file integrity."""
@@ -83,7 +92,7 @@ class Meta(object):
 
     def check_dependencies(self):
         """Check for the dependencies listed in the configuration meta."""
-        for key, value in self.meta.get('dependencies', ()).iteritems():
+        for key, value in self.data.get('dependencies', ()).iteritems():
             dep = Dependency.get_instance(key, value)
             if not dep.check():
                 raise MetaDependencyError("Dependency not matched: %r: %r." %

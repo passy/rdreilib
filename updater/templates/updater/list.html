@@ -25,7 +25,7 @@
     </h2>
     </header>
     <footer class="post-info">
-      <a href="#">Verify</a>
+    <a href="#" class="action verify" id="verify_{{ version['revision'] }}">Verify</a>
     </footer>
     <div class="entry-content">
       {% if version.update.state == 'verify' %}
@@ -46,7 +46,7 @@
 <script type="text/javascript" src="{{url_for('shared/updater', filename='js/updater.js')}}"></script>
 <script type="text/javascript">
   $(function() {
-    window.ula = new UpdateListApplication();
+    window.updater = new UpdateApplication("list");
   });
 </script>
 {% endblock %}

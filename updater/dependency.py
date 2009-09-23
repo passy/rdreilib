@@ -23,6 +23,18 @@ class Dependency(object):
 
         raise NotImplementedError()
 
+    @staticmethod
+    def get_instance(key, value):
+        """Creates a new dependency for the given key (like 'package') and the
+        value (e.g. the requirement)."""
+        if key == 'application':
+            return ApplicationDependency(value)
+        elif key == 'package':
+            return PackageDenpendency(value)
+        else:
+            raise TypeError("Unsupported dependency type %r." % key)
+
+
 class PackageDenpendency(Dependency):
     """A dependency requiring a python package with a specific version to be
     installed."""
@@ -37,17 +49,6 @@ class PackageDenpendency(Dependency):
             return False
 
         return True
-
-    @staticmethod
-    def get_instance(key, value):
-        """Creates a new dependency for the given key (like 'package') and the
-        value (e.g. the requirement)."""
-        if key == 'application':
-            return ApplicationDependency(value)
-        elif key == 'package':
-            return PackageDenpendency(value)
-        else:
-            raise TypeError("Unsupported dependency type %r." % key)
 
 class ApplicationDependency(Dependency):
     """Specified a specific requirement on the application. Currently only
@@ -65,7 +66,7 @@ class ApplicationDependency(Dependency):
         current = UpdateLog.query.get_latest().version.revision
 
         # Get the part after revision
-        bits = self.requirement.split("revision")[1:]
+        bits = self.requirement.split("revision")[1:][0]
 
         # Mini-lexing
         comparison, revision = '', ''
@@ -79,7 +80,7 @@ class ApplicationDependency(Dependency):
         try:
             revision = int(revision, 10)
         except ValueError:
-            raise ValueError("ApplicationDependency is not wel formed: %r" %
+            raise ValueError("ApplicationDependency is not well-formed: %r" %
                              self.requirement)
 
         if comparison == "==":

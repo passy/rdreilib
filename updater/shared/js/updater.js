@@ -11,6 +11,19 @@
 /*jslint white: true, onevar: true, browser: true, undef: true, nomen: true, eqeqeq: true, plusplus: true, bitwise: true, regexp: true, strict: true, newcap: true, immed: true */
 "use strict";
 
+function UpdateListApplication() {
+    function _start_verify() {
+        var id = $(this).attr('id').split('verify_')[1];
+        $.getJSON("ajax/verify/"+id, null, this.on_verified);
+        return false;
+    }
+    $(".action.verify").click(_start_verify);
+}
+
+UpdateListApplication.prototype.on_verified = function (data) {
+    console.log("Verification state: ", data);
+};
+
 function UpdateTableApplication() {
     // Not actually a html table, but it contains data in kind of a grid.
     this.$table = $("#posts-list");
@@ -51,7 +64,7 @@ UpdateTableApplication.prototype.request_download_update = function (download_id
 
 UpdateTableApplication.prototype.update_download_step = function (download_id, data) {
     if ('error' in data) {
-        return window.ua.on_ajax_error(data);
+        return window.updater.on_ajax_error(data);
     }
     var progress, $bar;
     progress = data.progress;
@@ -76,26 +89,26 @@ UpdateTableApplication.prototype.download_stop = function () {
 
 UpdateTableApplication.prototype.on_download_ended = function (data) {
     if ('error' in data) {
-        return window.ua.on_ajax_error(data);
+        return window.updater.on_ajax_error(data);
     }
     console.log("Coming soon.");
 };
 
-function UpdateApplication() {
+function UpdateApplication(arg) {
 
     function update_check(check_id, img) {
-        return window.ua.update_check(check_id, img);
+        return window.updater.update_check(check_id, img);
     }
 
     function on_ajax_error(data) {
-        return window.ua.on_ajax_error(data);
+        return window.updater.on_ajax_error(data);
     }
 
     function bind_spinner() {
         $(window.document).ajaxStart(function () {
-            window.ua.update_image("/_shared/updater/images/spinner.apng");
+            window.updater.update_image("/_shared/updater/images/spinner.apng");
         }).ajaxSuccess(function (event, xhr) {
-            window.ua.update_image();
+            window.updater.update_image();
         }).ajaxError(on_ajax_error);
     }
 
@@ -129,6 +142,10 @@ function UpdateApplication() {
 
     bind_spinner();
     bind_check();
+
+    if (arg === "list") {
+        this.list_app = new UpdateListApplication();
+    }
 }
 
 UpdateApplication.prototype.update_image = function (img, instant) {
@@ -144,7 +161,7 @@ UpdateApplication.prototype.update_image = function (img, instant) {
 };
 
 UpdateApplication.prototype.on_ajax_error = function (data) {
-    window.ua.update_check(3, "/_shared/updater/images/error_box.png");
+    window.updater.update_check(3, "/_shared/updater/images/error_box.png");
     if (data) {
         $("#error_data").text(data.error);
     }
@@ -157,6 +174,6 @@ UpdateApplication.prototype.update_check = function (check_id, img) {
         .end().find(".check_" + check_id)
             .fadeIn();
     if (img) {
-        window.ua.update_image(img);
+        window.updater.update_image(img);
     }
 };

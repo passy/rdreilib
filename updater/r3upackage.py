@@ -24,10 +24,15 @@ class R3UPackage(object):
 
         self.meta = Meta(content=mdata)
 
-    def check(self):
-        """Basic check if meta file is valid."""
-        self.meta.check(signature=False)
+    def check(self, signature=True):
+        """Basic check if meta file is valid.
+        :param signature: Boolean whether to make a signature check or not.
+        :return: True. Raises exceptions on failure.
+        """
+
+        self.meta.check(signature=signature)
         self._check_package()
+        return True
 
     def _check_package(self):
         """Basic check if referenced package is available."""
