@@ -35,6 +35,7 @@ to use sha would be a good thing.
 .. [1] http://www.faqs.org/rfcs/rfc2617.html
 """
 from werkzeug.exceptions import HTTPException, Unauthorized as _Unauthorized
+from werkzeug.wrappers import Request
 
 try:
     from hashlib import md5
@@ -112,37 +113,30 @@ class AuthDigestAuthenticator(object):
         """ This function takes a WSGI environment and authenticates
             the request returning authenticated user or error.
         """
-        #TODO: Consider using a werkzeug wrapper!
-        method = environ.get('REQUEST_METHOD', '')
-        fullpath = environ.get('SCRIPT_NAME', '') + environ.get('PATH_INFO', '')
-        authorization = environ.get('HTTP_AUTHORIZATION', '')
+        request = Request(environ)
+        method = request.method
+        fullpath = request.script_root + request.path
+        authorization = request.authorization
         if not authorization:
-            print("No authorization found!")
             return self.build_authentication()
-        (authmeth, auth) = authorization.split(" ", 1)
-        if 'digest' != authmeth.lower():
-            print("authmeth.lower() != 'digest': %r" % authmeth.lower())
+        if authorization.type != 'digest':
             return self.build_authentication()
-        amap = {}
-        for itm in auth.split(", "):
-            (k,v) = [s.strip() for s in itm.split("=", 1)]
-            amap[k] = v.replace('"', '')
         try:
-            username = amap['username']
-            authpath = amap['uri']
-            nonce    = amap['nonce']
-            realm    = amap['realm']
-            response = amap['response']
+            username = authorization.username
+            authpath = authorization.uri
+            nonce    = authorization.nonce
+            realm    = authorization.realm
+            response = authorization.response
             assert authpath.split("?", 1)[0] in fullpath
             assert realm == self.realm
-            qop      = amap.get('qop', '')
-            cnonce   = amap.get('cnonce', '')
-            nc       = amap.get('nc', '00000000')
+            qop      = authorization.qop
+            cnonce   = authorization.cnonce
+            nc       = authorization.nc
             if qop:
-                assert 'auth' == qop
+                assert 'auth' == str(qop)
                 assert nonce and nc
-        except Exception as e:
-            print("Exception raised: %r" % e)
+        except AssertionError as e:
+            raise
             return self.build_authentication()
         ha1 = self.authfunc(environ, realm, username)
         return self.compute(ha1, username, response, method, authpath,
