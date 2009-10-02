@@ -9,6 +9,7 @@
     :license: BSD, see LICENSE for more details.
 """
 import re
+import os
 import inspect
 import simplejson
 from xml.sax.saxutils import quoteattr
@@ -18,16 +19,16 @@ from werkzeug.exceptions import MethodNotAllowed, BadRequest
 from werkzeug import Response, escape
 
 from glashammer.utils.local import get_app
-from glashammer.utils.templating import render_template
-from .lazystring import make_lazy_string
+from glashammer.utils.wrappers import render_template
+from glashammer.utils.lazystring import make_lazy_string
 
 from glashammer.bundles.i18n2 import _, has_section
-from rdreilib.remoting import remote_export_primitive
-from rdreilib.formatting import format_creole
+from .remoting import remote_export_primitive
+from .formatting import format_creole
 
 
 # If this is included too early, eager loading raises a KeyError.
-XML_NS = make_lazy_string(lambda: app.cfg['api/xml_ns'])
+XML_NS = make_lazy_string(lambda: get_app().cfg['api/xml_ns'])
 
 
 _escaped_newline_re = re.compile(r'(?:(?:\\r)?\\n)')
@@ -158,11 +159,11 @@ def list_api_methods():
     for rule in application.map.iter_rules():
         if rule.build_only:
             continue
-        view = application().get_view(rule.endpoint)
+        view = application.find_view(rule.endpoint)
         if not getattr(view, 'is_api_method', False):
             continue
         handler = view.__name__
-        if handler.startswith('api.'):
+        if handler.startswith('api_'):
             handler = handler[4:]
         result.append(dict(
             handler=handler,
@@ -188,7 +189,7 @@ _serializer_map = {
 
 def setup_api(app):
     """Glashammer setup. Use this if you want to use this module."""
-    app.create_config_var('api/ns', str, 'http://rdrei.net/api')
+    app.add_config_var('api/xml_ns', str, 'http://rdrei.net/api')
     app.add_template_searchpath(os.path.join(
         os.path.dirname(__file__),
         'templates/'
