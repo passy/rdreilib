@@ -5,7 +5,7 @@ rdreilib.beaker.session
 Glashammer bundle for beaker session integration.
 
 :copyright: 2009, Pascal Hartig <phartig@rdrei.net>
-:license: GPL v3, see doc/LICENSE for more details.
+:license: BSD, see doc/LICENSE for more details.
 """
 
 from beaker.middleware import SessionMiddleware

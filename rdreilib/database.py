@@ -6,8 +6,10 @@
 
 
  :copyright: 2008 by Pascal Hartig <phartig@rdrei.net>
- :license: GPL, see doc/LICENSE for more details.
+ :license: BSD, see doc/LICENSE for more details.
 """
+
+#TODO: Is this superseeded by glashammer.bundles.database?
 
 from p2lib import p2_to_int
 from glashammer.bundles.sqlalchdb import metadata, session, Query as _Query

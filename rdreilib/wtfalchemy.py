@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """
- wtforms.ext.sqlalchemy.orm
- ~~~~~~~~~~~~~~~~
+ rdreilib.wtfalchemy
+ ~~~~~~~~~~~~~~~~~~~
  Tools for turning sqlalchemy declarative-style models into a form.
 
 
  :copyright: 2009 by Pascal Hartig <phartig@rdrei.net>
- :license: Dual licensed under GPL v3 and MIT
+ :license: Dual licensed under GPL v3 and BSD. See doc/LICENSE for more
+ information.
  """
 
 from wtforms import Form

@@ -6,7 +6,7 @@
 
 
  :copyright: 2008 by Pascal Hartig <phartig@rdrei.net>
- :license: GPL, see doc/LICENSE for more details.
+ :license: BSD, see doc/LICENSE for more details.
  """
 
 from eauth.models import AnonymousUser

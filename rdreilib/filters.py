@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
- rdrei.lib.filters
+ rdreilib.filters
  ~~~~~~~~~~~~~~~~
  Additional template filters
 
 
  :copyright: 2008 by Pascal Hartig <phartig@rdrei.net>
- :license: GPL, see doc/LICENSE for more details.
+ :license: BSD, see doc/LICENSE for more details.
 """
 
 import re, logging

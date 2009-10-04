@@ -5,6 +5,10 @@ rdreilib
 
 Various reusable utilities for Glashammer/WSGI projects.
 
+It tries, just as glashammer, to not reinvent the wheel and reuse existing code
+where possible. There's a lot borrowed from great projects like Zine and
+Solace.
+
 
 For more information consult the `README` file or have a
 look at the `website <http://code.rdrei.net/rdreilib/>`_.
@@ -36,7 +40,7 @@ setup(
     description='Tools for Glashammer',
     long_description=__doc__,
     packages=['rdreilib', 'rdreilib.beaker', 'rdreilib.eauth',
-              'rdreilib.middleware']
+              'rdreilib.middleware'],
     platforms='any',
     install_requires=[
         'Werkzeug>0.5',

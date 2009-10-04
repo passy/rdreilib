@@ -6,7 +6,7 @@
 
 
  :copyright: 2008, 2009 by Pascal Hartig <phartig@rdrei.net>
- :license: GPL, see doc/LICENSE for more details.
+ :license: BSD, see doc/LICENSE for more details.
  """
 
 from glashammer.utils.wrappers import render_template

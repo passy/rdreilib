@@ -5,7 +5,7 @@ rdreilib.beaker.utils
 Some utilities to better integrate beaker into glashammer.
 
 :copyright: 2009, Pascal Hartig <phartig@rdrei.net>
-:license: GPL v3, see doc/LICENSE for more details.
+:license: BSD, see doc/LICENSE for more details.
 """
 
 def make_dict(cfg, org_prefix, new_prefix):

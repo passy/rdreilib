@@ -1,3 +1,15 @@
+# -*- coding: utf-8 -*-
+"""
+rdreilib.eauth.models
+~~~~~~~~~~~~~~~~~~~~~
+
+SQLAlchemy models for eauth. Uses metadata from glashammer bundle.
+
+:copyright: 2009, Pascal Hartig <phartig@rdrei.net>
+:license: BSD, see doc/LICENSE for more details.
+"""
+
+
 import sqlalchemy as db
 
 from ..database import ModelBase
