@@ -36,7 +36,7 @@ def authenticate(login, password):
         return user
 
 def login(req, user):
-    "Persist a user id in the request."
+    """Persist a user id in the request."""
 
     user.profile.last_login = datetime.datetime.now()
     session.commit()
@@ -45,7 +45,7 @@ def login(req, user):
     req.set_user(user)
 
 def logout(req):
-    "Removes the session values."
+    """Removes the session values."""
     if SESSION_KEY in req.session:
         del req.session[SESSION_KEY]
 

@@ -9,11 +9,9 @@
  :license: BSD, see doc/LICENSE for more details.
 """
 
-#TODO: Is this superseeded by glashammer.bundles.database?
-
 from p2lib import p2_to_int
-from glashammer.bundles.sqlalchdb import metadata, session, Query as _Query
-from glashammer.bundles.sqlalchdb import MetaModel, ModelBaseMeta
+from glashammer.bundles.database import metadata, session, Query as _Query
+from glashammer.bundles.database import MetaModel, ModelBaseMeta
 from sqlalchemy.ext.declarative import declarative_base
 from werkzeug.exceptions import NotFound
 from sqlalchemy import orm

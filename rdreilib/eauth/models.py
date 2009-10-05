@@ -77,7 +77,7 @@ class User(ModelBase):
 
     def set_unusable_password(self):
         """Sets a password, that will never be ususable for a
-        real login. This is usable if the account is hacked and
+        real login. This is useful if the account is hacked and
         a new password should be set by the user or - more common -
         if you are using a different authentication backend like facebook
         connect."""
@@ -95,6 +95,7 @@ class User(ModelBase):
         return self.password == self.__encrypt_password(password)
 
     def is_authenticated(self):
+        """Easier to distinguish from a :class:``AnonymousUser``."""
         return True
 
     def has_perm(self, perm):
