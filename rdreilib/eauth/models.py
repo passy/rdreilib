@@ -37,6 +37,11 @@ class User(ModelBase):
     is_active = db.Column(db.Boolean, default=True)
     is_superuser = db.Column(db.Boolean, default=False)
 
+    def __init__(self, user_name, password):
+        """Creates a new user from scratch."""
+        self.user_name = user_name
+        self.password = password
+
     @property
     def user_p2id(self):
         return int_to_p2(self.user_id)
