@@ -88,7 +88,6 @@ class AuthDigestAuthenticator(object):
                       path, nonce, nc, cnonce, qop):
         """ computes the authentication, raises error if unsuccessful """
         if not ha1:
-            print("No ha1 set.")
             return self.build_authentication()
         ha2 = md5('%s:%s' % (method, path)).hexdigest()
         if qop:
@@ -96,7 +95,6 @@ class AuthDigestAuthenticator(object):
         else:
             chk = "%s:%s:%s" % (ha1, nonce, ha2)
         if response != md5(chk).hexdigest():
-            print("Response %r != %r" % (response, md5(chk).hexdigest()))
             if nonce in self.nonce:
                 del self.nonce[nonce]
             return self.build_authentication()
@@ -104,7 +102,6 @@ class AuthDigestAuthenticator(object):
         if nc <= pnc:
             if nonce in self.nonce:
                 del self.nonce[nonce]
-            print("nc (%r) <= pnc" % (nc, pnc))
             return self.build_authentication(stale = True)
         self.nonce[nonce] = nc
         return username
