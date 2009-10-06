@@ -14,7 +14,7 @@
     <pre>{{ request.url }}users/username</pre>
     <p>
       The format of the data returned can be one of the following:
-    <ul>
+    <ul class="list">
       <li>json <small>application/json</small>
       <li>xml <small>application/xml</small>
       <li>debug <small>text/html</small>
@@ -41,7 +41,7 @@
       The API follows REST semantics as closely as possible without causing
       too much troubles for server and client.  Make sure to follow the
       following rules:
-    <ul>
+    <ul class="list">
       <li>If a resource URL is documented with a trailing slash you
           <strong>must</strong> connect to it with a trailing slash
       <li>For valid requests the server will never return a redirect
@@ -64,7 +64,7 @@
       recommended you can also use our XML representation of the data.
     <p>
       The following rules apply for the XML format:
-    <ul>
+    <ul class="list">
       <li><p>All elements returned from the API belong to the
           <code>{{ xmlns }}</code> XML namespace.
       <li><p>If an object in JSON has a <code>#type</code> key and the value
