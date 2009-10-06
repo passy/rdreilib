@@ -67,7 +67,18 @@ def _redirect_unauthorized(resp):
                                                             req.url})
         resp.status_code = 302
 
-def setup_eauth(app):
-    app.connect_event('request-start', _tag_request)
-    app.connect_event('response-start', _redirect_unauthorized)
+def setup_eauth(app, auth_realm=None, session_based=True):
+    """Sets up eauth in the glashammer application.
+
+    :param digest_auth: Boolean that indicates whether to store an optional MD5
+    hash of username:password:realm.
+    :param session_based: Boolean indicating whether to use a store login
+    information is session. If False, you have to take care of the user's login
+    state yourself.
+    """
+    app.add_config_var('general/auth_realm', str, auth_realm)
+
+    if session_based:
+        app.connect_event('request-start', _tag_request)
+        app.connect_event('response-start', _redirect_unauthorized)
 

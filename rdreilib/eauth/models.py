@@ -20,7 +20,7 @@ from glashammer.bundles.database import metadata
 
 from ..p2lib import int_to_p2
 
-from hashlib import sha1
+from hashlib import sha1, md5
 import datetime, types
 
 
@@ -32,6 +32,7 @@ class User(ModelBase):
     user_id = db.Column(db.Integer, autoincrement=True, primary_key=True)
     user_name = db.Column(db.Unicode(50), unique=True)
     _password = db.Column('password', db.Unicode(40))
+    _password_digest = db.Column(db.Unicode(40))
 
     is_staff = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
@@ -49,6 +50,22 @@ class User(ModelBase):
     def _set_password(self, password):
         """encrypts password on the fly."""
         self._password = self.__encrypt_password(password)
+        
+        # Check if digest save is enabled for digest auth (RFC 2617)
+        auth_realm = get_app().cfg['general/auth_realm']
+        if auth_realm:
+            pw_digest = md5(u"%s:%s:%s" %
+                           (self.user_name,
+                            auth_realm,
+                            password)
+                          ).hexdigest()
+
+            # Enforce UTF-8
+            if not isinstance(pw_digest, unicode):
+                self._password_digest = pw_digest.decode('UTF-8')
+            else:
+                self._password_digest = pw_digest
+
 
     def _get_password(self):
         """returns password"""
