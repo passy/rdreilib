@@ -16,7 +16,7 @@ from ..database import ModelBase
 from sqlalchemy import orm
 from werkzeug.utils import cached_property
 from glashammer.utils.local import get_app
-from glashammer.bundles.sqlalchdb import metadata
+from glashammer.bundles.database import metadata
 
 from ..p2lib import int_to_p2
 

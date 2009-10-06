@@ -44,6 +44,6 @@ setup(
     platforms='any',
     install_requires=[
         'Werkzeug>0.5',
-        'Glashammer',
+        'Glashammer-rdrei',
     ],
 )
