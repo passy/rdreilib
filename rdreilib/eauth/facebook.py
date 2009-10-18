@@ -98,8 +98,9 @@ class FacebookMiddleware(object):
             emit_event("fconnect-login-end", req, user)
         else:
             # Creating a new user
-            user = User()
-            user.user_name = USERNAME_SCHEMA % username
+            user = User(USERNAME_SCHEMA % username, '')
+            # Make sure the user can only log in via facebook. Ha, we are
+            # smarter than pinax was. :D
             user.set_unusable_password()
             profile = Profile()
             profile.user = user
