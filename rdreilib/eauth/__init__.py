@@ -14,6 +14,7 @@ from models import User, Group, Permission, AnonymousUser
 from ..database import session
 from sqlalchemy import and_, or_
 from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.orm import eagerload
 from glashammer.utils import url_for, get_request
 from werkzeug.utils import redirect
 
@@ -57,7 +58,10 @@ def _tag_request(req):
     assert hasattr(req, 'session'), "We require the request object to provide "\
             "a valid session."
     if SESSION_KEY in req.session:
-        user = User.query.filter_by(user_id=req.session[SESSION_KEY]).one()
+        user = User.query.\
+                options(eagerload('profile')).\
+                filter_by(user_id=req.session[SESSION_KEY]).\
+                one()
         if user:
             req.set_user(user)
 
