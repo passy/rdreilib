@@ -12,8 +12,8 @@ SQLAlchemy models for eauth. Uses metadata from glashammer bundle.
 
 import sqlalchemy as db
 
-from ..database import ModelBase
-from sqlalchemy import orm
+from ..database import ModelBase, session
+from sqlalchemy import orm, and_
 from werkzeug.utils import cached_property
 from glashammer.utils.local import get_app
 from glashammer.bundles.database import metadata
@@ -120,7 +120,29 @@ class User(ModelBase):
         """Easier to distinguish from a :class:``AnonymousUser``."""
         return True
 
-    def has_perm(self, perm):
+    @cached_property
+    def permissions(self):
+        """Commulated list of permissions granted, based on current group
+        memberships."""
+
+        result = session.query(Permission.permission_name).\
+                filter(Permission.permission_id.in_(
+                    session.query(group_permission_table.c.permission_id).\
+                    select_from(
+                        orm.outerjoin(
+                            group_permission_table,
+                            user_group_table,
+                            and_(
+                                group_permission_table.c.group_id==user_group_table.c.user_id,
+                                user_group_table.c.user_id==self.user_id
+                            )
+                        )
+                    )
+                ))
+
+        return [value.permission_name for value in result]
+
+    def has_perm_uncached(self, perm):
         "Returns True if the user has the specified permission."
 
         # If perm is a string, find the object.
@@ -142,6 +164,27 @@ class User(ModelBase):
                 return True
 
         return False
+
+    def has_perm(self, perm):
+        """Aims to replace the has_perm_uncached method by using a single query
+        for all permission requests. Returns True if the user has the specified
+        permission.
+
+        :return: boolean"""
+
+        if type(perm) not in types.StringTypes:
+            # Fall back, if this looks like an object.
+            return self.has_perm_uncached(perm)
+
+        if not self.is_active:
+            return False
+
+        if self.is_superuser:
+            return True
+
+        # This is the magic. (:
+        return perm in self.permissions
+
 
     def has_perms(self, perm_list):
         "Returns True if the user has each of the specified permissions."

@@ -29,7 +29,9 @@ def authenticate(login, password):
     #user = User.query.filter(or_(User.user_name==login,
     #                             User.email==login))
     try:
-        user = User.query.filter(User.user_name==login).one()
+        user = User.query.\
+                filter(User.user_name==login).\
+                one()
     except NoResultFound:
         return None
     if user.validate_password(password):
