@@ -16,7 +16,7 @@ import logging
 import time
 
 from glashammer.utils import log
-#log = logging.getLogger("rdrei.lib.decorators")
+log = logging.getLogger("rdreilib.decorators")
 
 def timed(func):
     @wraps(func)
@@ -40,4 +40,18 @@ def force_method(method):
             return func(self, req, *args, **kwargs)
         return _inner
     return _outer
+
+def on_method(function_decorator):
+    """Decorate a decorator to ignore the first argument to a function."""
+
+    def decorate_method(unbound_method):
+        def method_proxy(self, *args, **kwargs):
+            def f(*a, **kw):
+                return unbound_method(self, *a, **kw)
+
+            return function_decorator(f)(*args, **kwargs)
+
+        return method_proxy
+
+    return decorate_method
 

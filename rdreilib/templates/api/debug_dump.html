@@ -2,13 +2,15 @@
 {% set page_title = 'API Response Dump' %}
 {% block content %}
   <div class="apidump">
-    <p>This is a debug dump of the data exported from this API
+    <h2>API Dump</h2>
+    <p>This is a debug dump of the data exported from this API</p>
     <dl>
-      <dt>API Request
-      <dd><code>{{ request.method|e }}</code>: {{ request.path|e }}
-      <dt>Internal API handler
-      <dd><code>{{ request.endpoint }}</code>
+      <dt>API Request</dt>
+      <dd><code>{{ request.method|e }}</code>: {{ request.path|e }}</dd>
+      <dt>Internal API handler</dt>
+      <dd><code>{{ request.endpoint }}</code></dd>
     </dl>
+    <h3>Result</h3>
     <pre>{{ dump|e }}</pre>
   </div>
 {% endblock %}

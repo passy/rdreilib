@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-    rdreilib.api
+    rdreilib.
     ~~~~~~~~~~~~
 
     Provides basic helpers for the API.
@@ -11,12 +11,15 @@
 import re
 import os
 import inspect
+import logging
 import simplejson
+import suds.client
 from xml.sax.saxutils import quoteattr
+from suds import WebFault
 from functools import update_wrapper
 from babel import Locale, UnknownLocaleError
 from werkzeug.exceptions import MethodNotAllowed, BadRequest
-from werkzeug import Response, escape
+from werkzeug import Response, escape, Request
 
 from glashammer.utils.local import get_app
 from glashammer.utils.wrappers import render_template
@@ -25,6 +28,7 @@ from glashammer.utils.lazystring import make_lazy_string
 from glashammer.bundles.i18n2 import _, has_section
 from .remoting import remote_export_primitive
 from .formatting import format_creole
+from .decorators import on_method
 
 
 # If this is included too early, eager loading raises a KeyError.
@@ -32,6 +36,7 @@ XML_NS = make_lazy_string(lambda: get_app().cfg['api/xml_ns'])
 
 
 _escaped_newline_re = re.compile(r'(?:(?:\\r)?\\n)')
+log = logging.getLogger('rdreilib.api')
 
 
 def debug_dump(obj):
@@ -132,25 +137,53 @@ def prepare_api_request(request):
 
 def send_api_response(request, result):
     """Sends the API response."""
+    status = 200
+    if type(result) is dict and 'error' in result:
+        status = 500
+
     ro = remote_export_primitive(result)
     serializer, mimetype = get_serializer(request)
-    return Response(serializer(ro), mimetype=mimetype)
+    return Response(serializer(ro), mimetype=mimetype, status=status)
 
 
 def api_method(methods=('GET',)):
     """Helper decorator for API methods."""
     def decorator(f):
-        def wrapper(request, *args, **kwargs):
+        def wrapper(self, *args, **kwargs):
+            # Check whether self is an request object or the bound instance
+            if isinstance(self, Request):
+                request = self
+            else:
+                request = args[0]
+
             if request.method not in methods:
                 raise MethodNotAllowed(methods)
             prepare_api_request(request)
-            rv = f(request, *args, **kwargs)
+            rv = f(self, *args, **kwargs)
             return send_api_response(request, rv)
         f.is_api_method = True
         f.valid_methods = tuple(methods)
         return update_wrapper(wrapper, f)
     return decorator
 
+def soap_api_method(methods=('GET',)):
+    """Helper decorator for SOAP API methods that use suds. Tries to prepare
+    results and catches WebFaults. Also invokes the :func:``api_method``
+    decorator."""
+    def decorator(f):
+        @api_method(methods)
+        def wrapper(request, *args, **kwargs):
+            try:
+                result = f(request, *args, **kwargs)
+            except WebFault as exc:
+                # TODO: Look out how other REST services handle errors!
+                log.error('SOAP request failed: %r' % exc)
+                return {'error': str(exc)}
+
+            return result
+
+        return update_wrapper(wrapper, f)
+    return decorator
 
 def list_api_methods():
     """List all API methods."""
@@ -173,6 +206,73 @@ def list_api_methods():
         ))
     result.sort(key=lambda x: (x['url'], x['handler']))
     return result
+
+def SOAPActionFactory(client, service, options=None):
+    """Creates a single action for a SOAP-enabled controller for an action taken
+    from a subs-WSDL object.
+
+    :param options: Dictionary with options::
+        extra_kwargs: Add additional kwargs to every extracted method.
+        methods: tuple of allowed HTTP methods. Defaults to ('GET',)
+
+    :return: function or None"""
+
+    options = options or {}
+
+    func = getattr(client.service, service)
+    methods = options.get('methods', ('GET',))
+
+    def _method(self, request, *args, **kwargs):
+        """Closure for SOAPActionFactory-generated methods."""
+        kwargs.update(options.get('extra_kwargs', {}))
+        return func(*args, **kwargs)
+
+    # on_method makes the api_method decorator work for 'methods'
+    _method = soap_api_method(methods)(_method)
+
+    # Suds does not set a value by itself.
+    _method.__name__ = str(service)
+    # Provides undecorated access to the function
+    _method._func = func
+
+    return _method
+
+def SOAPControllerFactory(wsdl, map=None):
+    """Creates a Mixin including all methods specified in the WSDL supplied.
+    They are valid api methods that can be overridden.
+
+    :param wsdl: path to wsdl file.
+    :param map: dictionary with method name as key and options to be passed to
+    SOAPActionFactory. Key _all matches all methods.
+    :return: class that can either be used as mixin or standalone base.
+    """
+
+    map = map or {}
+    client = suds.client.Client(wsdl, cache=None)
+
+    class _ControllerMixin(object):
+        pass
+
+    method_list = []
+    # This seems quite intensive, but most times there's only one element
+    # per loop.
+    for definition in client.sd:
+        for port in definition.service.ports:
+            for method in port.methods.iterkeys():
+                method_list.append(method)
+
+                # Find global options and update with method specific
+                options = map.get('_all', {})
+                options.update(map.get(method, {}))
+                func = SOAPActionFactory(client, method, options)
+                setattr(_ControllerMixin, method, func)
+
+    # Make the list available as protected attribute
+    _ControllerMixin._soap_methods = method_list
+    _ControllerMixin._wsdl_path = wsdl
+
+    return _ControllerMixin
+
 
 
 _serializer_for_mimetypes = {
