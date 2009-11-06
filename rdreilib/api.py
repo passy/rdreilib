@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-    rdreilib.
+    rdreilib.api
     ~~~~~~~~~~~~
 
     Provides basic helpers for the API.
