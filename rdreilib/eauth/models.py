@@ -120,10 +120,11 @@ class User(ModelBase):
         """Easier to distinguish from a :class:``AnonymousUser``."""
         return True
 
-    @cached_property
     def permissions(self):
         """Commulated list of permissions granted, based on current group
         memberships."""
+
+        print "\n*** FETCHING PERMISSIONS! ***\n"
 
         result = session.query(Permission.permission_name).\
                 filter(Permission.permission_id.in_(
@@ -141,6 +142,8 @@ class User(ModelBase):
                 ))
 
         return [value.permission_name for value in result]
+
+    permissions = cached_property(permissions, writeable=True)
 
     def has_perm_uncached(self, perm):
         "Returns True if the user has the specified permission."
@@ -215,6 +218,7 @@ class AnonymousUser(object):
     is_authenticated = lambda self: False
     has_perm = lambda self, perm: False
     has_perms = lambda self, perms: False
+    permissions = list()
 
     def __repr__(self):
         return u"<AnonymousUser()>"

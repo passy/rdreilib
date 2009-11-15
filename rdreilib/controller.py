@@ -73,6 +73,7 @@ class BaseController(object):
         flash = self.session.get('flash', {})
         self.session['flash'] = {}
 
+        # Update 'cached' flash for next view
         if '_flash' in self.session:
             self.session['flash'] = self.session['_flash']
             del(self.session['_flash'])
