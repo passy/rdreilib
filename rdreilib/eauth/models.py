@@ -124,8 +124,6 @@ class User(ModelBase):
         """Commulated list of permissions granted, based on current group
         memberships."""
 
-        print "\n*** FETCHING PERMISSIONS! ***\n"
-
         result = session.query(Permission.permission_name).\
                 filter(Permission.permission_id.in_(
                     session.query(group_permission_table.c.permission_id).\

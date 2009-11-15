@@ -15,7 +15,7 @@ from ..database import session
 from sqlalchemy import and_, or_
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.orm import eagerload
-from glashammer.utils import url_for, get_request
+from glashammer.utils import url_for, get_request, get_application
 from werkzeug.utils import redirect
 
 import datetime, cPickle as pickle
@@ -53,6 +53,22 @@ def logout(req):
         del req.session[SESSION_KEY]
 
     req.unset_user()
+
+def invalidate(req, user_id=None):
+    """Invalidates the user cache. Call this after changing anything in the
+    user object or profile.
+
+    :param user_id: User ID to invalidate. Defaults to currently logged in
+    user.
+
+    TODO: Consider calling this automatically on save.
+    """
+
+    app = get_application()
+    if app.cfg['cache/enabled'] and app.cfg['cache/user_key']:
+        cache = req.cache.get_cache(app.cfg['cache/user_key'])
+        cache.remove(req.user.user_id)
+        cache.remove('perm_{0}'.format(req.user.user_id))
 
 def _redirect_unauthorized(resp):
     if resp.status_code == 401:
@@ -109,7 +125,7 @@ def setup_eauth(app, auth_realm=None, session_based=True, cache_key=None):
 
     # This should not be configurable via INI, because the string is used
     # internally by your application. You better define a constant for that.
-    # app.add_config_var('cache/cache_key', str, cache_key)
+    app.add_config_var('cache/user_key', str, cache_key)
 
     if cache_key:
         if not app.cfg['cache/enabled']:
