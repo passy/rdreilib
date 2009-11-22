@@ -58,7 +58,7 @@ def json_view(f, encoder=None):
             resp = JsonResponse({'error': repr(err)})
             # Choosing 500 would be more meaningful, but makes it unparsable for
             # jQuery. If debug mode is off, we return a 500 and be less verbose.
-            if not get_app().cfg['debug']:
+            if not get_app().cfg['general/debug']:
                 resp.status_code = 500
             return resp
         if callable(res):

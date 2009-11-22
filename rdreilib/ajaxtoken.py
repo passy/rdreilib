@@ -45,6 +45,7 @@ def require_ajax_token_factory(reset):
     """Creates a new decorator for ajax token validation.
     :param reset {bool}: Sets whether to automatically generate a new one or
     keep the old.
+    Deprecated in favor of :func:``requite_ajax_token2``
     :return: func
     """
     def outer(func):
@@ -73,8 +74,40 @@ def require_ajax_token_factory(reset):
         return decorate
     return outer
 
-# Default decorator.
+def require_csrf_token_factory(form_var='_csrf_token',
+                               cookie_var='r3csrfprot',
+                               exception_type=JSONException):
+    """Create a new ``require_csrf_token`` decorator based on the options
+    submitted."""
+
+    def require_csrf_token(func):
+        """Raises a JSONException if posted '_csrf_token' does not match with
+        cookie value."""
+
+        @wraps(func)
+        def decorator(self, req, *args, **kwargs):
+            if form_var not in req.form or \
+               cookie_var not in req.cookies:
+                log.info("CSRF-Protection failed. Either cookie or post "
+                          "value not found!")
+                raise exception_type("CSRF protection validation failed! "
+                                     "Form data missing!")
+
+            elif req.form['_csrf_token'] != req.cookies['r3csrfprot']:
+                raise exception_type("CSRF protection validation failed! "
+                                     "Form data invalid!")
+            else:
+                return func(self, req, *args, **kwargs)
+
+        return decorator
+
+    return require_csrf_token
+
+
+# Default decorators.
 require_ajax_token = require_ajax_token_factory(True)
+require_csrf_token = require_csrf_token_factory()
+
 
 def enhance_ajax_token(req, dic):
     """Enhances a response dictionary be a '_ajax_token' value."""
