@@ -57,15 +57,18 @@ class FacebookMiddleware(object):
 
     def check_profile(self, req, user):
         """Checks the user profile and fetches missing data from facebook."""
+        # First name is mandatory on facebook, so if this is missing, the
+        # data has not been fetched yet.
         if user.profile.first_name is None:
             self.update_profile(req, user)
 
     def update_profile(self, req, user):
         """Updates the profile data from facebook."""
         if not req.facebook:
+            log.warn("Updating profile failed, because facebook request "
+                     "object was not present.")
             return
-        # First name is mandatory on facebook, so if this is missing, the
-        # data has not been fetched yet.
+
         #! This can raise an exception!
         user_data = req.facebook.users.getInfo(req.facebook.uid,
                                                self.PROFILE_ATTRIBUTE_WRAPPER.keys())
@@ -80,6 +83,7 @@ class FacebookMiddleware(object):
 
         # Update the time stamp
         profile.fb_last_update = datetime.datetime.now()
+        log.debug("Updated facebook profile data for user %r." % user)
 
         session.add(profile)
         session.commit()
@@ -136,8 +140,6 @@ class FacebookMiddleware(object):
 
 
 def setup_facebook_connect(app, fetch_profile=False):
-    log.info('Saving Facebook profile information is not compatible with their '
-             'Storable Data Guidelines.')
     app.add_config_var('facebook/api_key', str, '')
     app.add_config_var('facebook/secret_key', str, '')
 
@@ -147,6 +149,8 @@ def setup_facebook_connect(app, fetch_profile=False):
     app.connect_event('request-start', FM.check_cookie)
 
     if fetch_profile:
+        log.info('Saving Facebook profile information is not compatible with their '
+                 'Storable Data Guidelines.')
         # If this extra option is set, the profile is checked for existence and
         # missing data is fetched via FQL
         app.connect_event('fconnect-login-end', FM.check_profile)
