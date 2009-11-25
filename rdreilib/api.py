@@ -16,6 +16,7 @@ import simplejson
 import suds.client
 from xml.sax.saxutils import quoteattr
 from suds import WebFault
+from urllib2 import URLError
 from functools import update_wrapper
 from babel import Locale, UnknownLocaleError
 from werkzeug.exceptions import MethodNotAllowed, BadRequest
@@ -175,7 +176,7 @@ def soap_api_method(methods=('GET',)):
         def wrapper(request, *args, **kwargs):
             try:
                 result = f(request, *args, **kwargs)
-            except WebFault as exc:
+            except (WebFault,URLError) as exc:
                 # TODO: Look out how other REST services handle errors!
                 log.error('SOAP request failed: %r' % exc)
                 return {'error': str(exc)}
