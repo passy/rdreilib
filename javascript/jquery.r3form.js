@@ -129,4 +129,32 @@
         return this;
         
     };
+
+    if($.R3 === undefined) {
+        $.R3 = {};
+    }
+
+    $.R3.TokenStore = function (options) {
+        var that = {},
+            settings = {
+                'cookie_name': 'r3csrfprot'
+            };
+
+        $.extend(settings, options);
+
+        that.get = function () {
+            // Returns the current CSRF secret
+            return $.cookie(settings.cookie_name);
+        };
+
+        that.get_dict = function () {
+            // Returns the current CSRF secret in a dict with 'csrf_token' as key.
+            return {'_csrf_token': that.get()};
+        };
+
+        return that;
+    };
+
+    // Override this with your own to set custom options.
+    $.R3.tokenstore = TokenStore();
 }(jQuery));
