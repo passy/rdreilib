@@ -45,11 +45,11 @@ def require_ajax_token_factory(reset):
     """Creates a new decorator for ajax token validation.
     :param reset {bool}: Sets whether to automatically generate a new one or
     keep the old.
-    Deprecated in favor of :func:``requite_ajax_token2``
+    Deprecated in favor of :func:`require_csrf_token_factory`
     :return: func
     """
     def outer(func):
-        """Decorator that throws a JSONException if a _ajax_token is not set in 
+        """Decorator that throws a JSONException if a _ajax_token is not set in
         POST and sets a new token if it was found."""
         @wraps(func)
         def decorate(self, req, *args, **kwargs):
