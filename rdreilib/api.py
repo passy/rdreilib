@@ -28,7 +28,7 @@ from glashammer.utils.lazystring import make_lazy_string
 
 from glashammer.bundles.i18n2 import _, has_section
 from .remoting import remote_export_primitive
-from .formatting import format_creole
+from .rst_formatting import format_rst
 from .decorators import on_method
 
 
@@ -202,7 +202,7 @@ def list_api_methods():
         result.append(dict(
             handler=handler,
             valid_methods=view.valid_methods,
-            doc=format_creole((inspect.getdoc(view) or '').decode('utf-8')),
+            doc=format_rst((inspect.getdoc(view) or '').decode('utf-8')),
             url=unicode(rule)
         ))
     result.sort(key=lambda x: (x['url'], x['handler']))
