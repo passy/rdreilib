@@ -21,7 +21,7 @@ class CSRFProtectionMiddleware(object):
     glashammer's event infrastructure to avoid the overhead of generating
     request objects over and over again.
 
-    Please use :func:``setup_csrf_protection`` and don't use this directly!"""
+    Please use :func:`setup_csrf_protection` and don't use this directly!"""
 
     def __init__(self, app, cookie_name):
         self.app = app

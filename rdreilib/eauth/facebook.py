@@ -55,6 +55,22 @@ class FacebookMiddleware(object):
                    log.info("Hash invalid! Expected: %s, got: %s!" %
                             (signature_hash, req.cookies[self.api_key]))
 
+            # Check for new 'mu' facebook connect alpha cookies
+           elif 'fbs_'+self.api_key in req.cookies:
+
+               log.debug("Connect-JS API Cookie found.")
+               cookiedict = \
+                       self._decode_connectjs_cookie(req.cookies['fbs_'+self.api_key])
+               signature_hash = self._get_connectjs_signature(cookiedict)
+
+               if signature_hash == cookiedict['sig']:
+                   log.debug("ConnectJS key is valid. Assuming the user is "
+                             "as well.")
+                   self._login_or_create(req, cookiedict['uid'])
+               else:
+                   log.info("Hash invalid. Expected %s, got %s!" % (
+                       signature_hash, cookiedict['sig']))
+
     def check_profile(self, req, user):
         """Checks the user profile and fetches missing data from facebook."""
         # First name is mandatory on facebook, so if this is missing, the
@@ -121,6 +137,26 @@ class FacebookMiddleware(object):
                 # FBConnect_ prefix!
                 return self._login_or_create(req, username, True)
 
+    def _decode_connectjs_cookie(self, cookie):
+        """
+        Expects a cookie string and turns it into a dict.
+            >>> _decode_connectjs_cookie(u"expires=1234&secret=abcdert")
+            {'expires': 1234, 'secret': abcdert'}
+
+            >>> _decode_connectjs_cookie(u"blablanotvalid")
+            {}
+
+        """
+
+        # It's enclosed in useless quotes
+        cookie = cookie.replace('"', '')
+        try:
+            return dict(bit.split('=') for bit in cookie.split('&'))
+        except ValueError:
+            return {}
+
+
+
     def _get_facebook_signature(self, values_dict, is_cookie_check=False):
         signature_keys = []
         for key in sorted(values_dict.keys()):
@@ -138,6 +174,24 @@ class FacebookMiddleware(object):
         log.debug("Generated string: %r" % signature_string)
         return hashlib.md5(signature_string).hexdigest()
 
+    def _get_connectjs_signature(self, cookiedict):
+        """
+        Calculates a md5 signature from the cookie dict we have.
+        This is not documented by facebook, but I seems to work.
+        """
+
+        sorted_keys = sorted(cookiedict.keys())
+
+        # 'sig' is the comparison value. It's not included
+        signature = ''.join(['%s=%s' % (key, cookiedict[key]) for key
+                             in sorted_keys if key != 'sig'])
+
+        # Append the secret
+        signature += self.secret_key
+
+        print "SIGNATURE: %s" % signature
+
+        return hashlib.md5(signature).hexdigest()
 
 def setup_facebook_connect(app, fetch_profile=False):
     app.add_config_var('facebook/api_key', str, '')
@@ -155,3 +209,4 @@ def setup_facebook_connect(app, fetch_profile=False):
         # missing data is fetched via FQL
         app.connect_event('fconnect-login-end', FM.check_profile)
 
+# vim: set ts=8 sw=4 tw=78 ft=python: 
