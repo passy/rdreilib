@@ -11,7 +11,7 @@
 
 
 from glashammer.utils import get_app, Request
-from glashammer.bundles.i18n import _
+from glashammer.bundles.i18n2 import _
 
 from jsonlib import JSONException
 
