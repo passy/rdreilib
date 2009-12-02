@@ -4,7 +4,8 @@
  * 
  * Form helpers that integrate nicely into jquery.
  *
- * :copyright: date, Pascal Hartig <phartig@rdrei.net>
+ * :version: 0.5
+ * :copyright: 2009, Pascal Hartig <phartig@rdrei.net>
  * :license: BSD, see doc/LICENSE for more details.
  */
 
@@ -130,7 +131,7 @@
         
     };
 
-    if($.R3 === undefined) {
+    if ($.R3 === undefined) {
         $.R3 = {};
     }
 
@@ -156,5 +157,5 @@
     };
 
     // Override this with your own to set custom options.
-    $.R3.tokenstore = TokenStore();
+    $.R3.tokenstore = $.R3.TokenStore();
 }(jQuery));
