@@ -189,8 +189,6 @@ class FacebookMiddleware(object):
         # Append the secret
         signature += self.secret_key
 
-        print "SIGNATURE: %s" % signature
-
         return hashlib.md5(signature).hexdigest()
 
 def setup_facebook_connect(app, fetch_profile=False):
