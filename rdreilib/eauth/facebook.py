@@ -61,15 +61,19 @@ class FacebookMiddleware(object):
                log.debug("Connect-JS API Cookie found.")
                cookiedict = \
                        self._decode_connectjs_cookie(req.cookies['fbs_'+self.api_key])
-               signature_hash = self._get_connectjs_signature(cookiedict)
 
-               if signature_hash == cookiedict['sig']:
-                   log.debug("ConnectJS key is valid. Assuming the user is "
-                             "as well.")
-                   self._login_or_create(req, cookiedict['uid'])
-               else:
-                   log.info("Hash invalid. Expected %s, got %s!" % (
-                       signature_hash, cookiedict['sig']))
+               # We should probably check for more attributes, but this is
+               # most important.
+               if 'sig' in cookiedict:
+                   signature_hash = self._get_connectjs_signature(cookiedict)
+
+                   if signature_hash == cookiedict['sig']:
+                       log.debug("ConnectJS key is valid. Assuming the user is "
+                                 "as well.")
+                       self._login_or_create(req, cookiedict['uid'])
+                   else:
+                       log.info("Hash invalid. Expected %s, got %s!" % (
+                           signature_hash, cookiedict['sig']))
 
     def check_profile(self, req, user):
         """Checks the user profile and fetches missing data from facebook."""
