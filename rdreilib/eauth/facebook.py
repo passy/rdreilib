@@ -48,6 +48,7 @@ class FacebookMiddleware(object):
                signature_hash = self._get_facebook_signature(req.cookies, True)
                if signature_hash == req.cookies[self.api_key]:
                    log.debug("Hash key is valid! Assuming the user is valid!")
+                   self._set_fbsession(req, req.cookies)
                    self._login_or_create(req, req.cookies["%s_%s" %
                                          (self.api_key, "user")])
 
@@ -70,6 +71,7 @@ class FacebookMiddleware(object):
                    if signature_hash == cookiedict['sig']:
                        log.debug("ConnectJS key is valid. Assuming the user is "
                                  "as well.")
+                       self._set_fbsession(req, cookiedict, version=2)
                        self._login_or_create(req, cookiedict['uid'])
                    else:
                        log.info("Hash invalid. Expected %s, got %s!" % (
@@ -107,6 +109,29 @@ class FacebookMiddleware(object):
 
         session.add(profile)
         session.commit()
+
+    def _set_fbsession(self, req, cookies, version=1):
+        """Make facebook user id and session id available in the session.
+        Respects the version changes between facebook connect version 1 and
+        connectJS."""
+
+        session_dict = {}
+
+        if version == 1:
+            session_dict = {
+                'fb_user_id': cookies['%s_user' % self.api_key],
+                'fb_session_id': cookies['%s_session_key' % self.api_key]
+            }
+        elif version == 2:
+            session_dict = {
+                'fb_user_id': cookies['uid'],
+                'fb_session_key': cookies['session_key']
+            }
+        else:
+            raise TypeError("Facebook Connect API version %r is not supported "
+                            "yet." % version)
+
+        req.session.update(session_dict)
 
     def _login_or_create(self, req, username, _recursive=False):
         """Trying to find the user based on the ID we get from the

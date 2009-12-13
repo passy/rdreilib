@@ -72,8 +72,8 @@ class Request(GHRequest):
                 facebook = Facebook(api_key, secret_key)
                 # Settings the cookie values
                 # It's so cool to have no private attributes. (;
-                facebook.uid = self.cookies["%s_user" % api_key]
-                facebook.session_key = self.cookies["%s_session_key" % api_key]
+                facebook.uid = self.session['fb_user_id']
+                facebook.session_key = self.session['fb_session_id']
                 return facebook
 
     def set_user(self, user):
