@@ -35,7 +35,9 @@
             errors: false,
             error_key: 'form_errors',
             error_list_class: 'errorlist',
-            error_callback: window.alert
+            error_callback: function (message) {
+                window.alert(message);
+            }
         }, $this = $(this),
            is_error = false;
 
@@ -153,9 +155,23 @@
             return {'_csrf_token': that.get()};
         };
 
+        that.enhance_formdata = function (data) {
+            // Enhances an existing form data array with the csrf token
+            if (!data) {
+                data = [];
+            }
+
+            data.push({
+                name: '_csrf_token',
+                value: that.get()
+            });
+
+            return data;
+        };
+
         return that;
     };
 
     // Override this with your own to set custom options.
-    $.R3.tokenstore = $.R3.TokenStore();
+    $.tokenstore = $.R3.TokenStore();
 }(jQuery));
