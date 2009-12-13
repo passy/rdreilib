@@ -125,7 +125,7 @@ class FacebookMiddleware(object):
         elif version == 2:
             session_dict = {
                 'fb_user_id': cookies['uid'],
-                'fb_session_key': cookies['session_key']
+                'fb_session_id': cookies['session_key']
             }
         else:
             raise TypeError("Facebook Connect API version %r is not supported "
