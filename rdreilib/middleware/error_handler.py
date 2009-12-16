@@ -83,6 +83,18 @@ class ErrorHandler(object):
 
 
 def setup_error_handler(app):
-    """Set up display of custom error pages."""
+    """
+    Set up display of custom error pages.
+    Expects an endpoint like ``error/error_404`` for every error code you'd
+    like to handle.
+
+    Does not support correct handling of 500 errors yet.
+    Adds a bunch of new configuration variables:
+    
+    * error/logging_enabled: Allows you to disable error logging.
+    * error/logging_handler: Name of the error handler to log http errors to.
+    * error/log_4xx: Log errors like 400, 401, 402 ...
+    * error_log_5xx: Log errors like 500, 501, 502 ...
+    """
 
     ErrorHandler(app)
