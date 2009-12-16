@@ -8,7 +8,7 @@ Glashammer bundle for beaker cache.
 :license: BSD, see doc/LICENSE for more details.
 """
 
-from .utils import make_dict
+from .utils import make_beaker_dict_from_config
 from beaker.middleware import CacheMiddleware
 
 def _enhance_request(req):
@@ -28,7 +28,7 @@ def setup_cache(app):
     app.add_config_var("cache/type", str, None)
     app.add_config_var("cache/url", str, None)
 
-    config = make_dict(app.cfg, "cache/", "cache.")
+    config = make_beaker_dict_from_config(app.cfg, "cache/", "cache.")
 
     app.add_middleware(CacheMiddleware, config)
     app.connect_event('request-start', _enhance_request)

@@ -8,7 +8,7 @@ Some utilities to better integrate beaker into glashammer.
 :license: BSD, see doc/LICENSE for more details.
 """
 
-def make_dict(cfg, org_prefix, new_prefix):
+def make_beaker_dict_from_config(cfg, org_prefix, new_prefix):
     """Generates a dictionary that is parsable by beaker from prefixed config
     valures stored in the zine/glashammer config."""
 
