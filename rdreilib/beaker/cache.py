@@ -11,10 +11,12 @@ Glashammer bundle for beaker cache.
 from .utils import make_beaker_dict_from_config
 from beaker.middleware import CacheMiddleware
 
+
 def _enhance_request(req):
     """Make cache object available in request object."""
 
     req.set_cache(req.environ['beaker.cache'])
+
 
 def setup_cache(app):
     app.add_config_var("cache/enabled", bool, False)

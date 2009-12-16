@@ -23,6 +23,12 @@ class CachedView(object):
         Creates a new cache decorator overriding the default expire and
         namespace values specified in the config.ini.
 
+        Example use::
+
+            @CachedView("my_cache", cache_args=('user_id',), expire=60*5)
+            def user_profile(self, req, user_id):
+                ...
+
         :param namespace: `thing` to cache. Keep for invaliation.
         :param cache_args: function arguments used to generate the key from.
         Accepts a list of argument names. String representation of arguments
@@ -48,7 +54,6 @@ class CachedView(object):
 
         return _inner
 
-
     def _get_argument_value(self, index, args, kwargs):
         """Returns the value on a list of arguments and keywords arguments on
         a specific index."""
@@ -59,7 +64,6 @@ class CachedView(object):
             return str(args[index])
         else:
             return str(kwargs[index - args_len])
-
 
     def generate_key(self, func, args, kwargs):
         """Generate the key used to store and retrieve objects from cache.
@@ -83,7 +87,6 @@ class CachedView(object):
 
         return '.'.join(key)
 
-
     def get_request(self, args):
         """Tries to retrieve the request object from a list of arguments.
         Returns the first argument in the list that looks like a request
@@ -105,13 +108,7 @@ class CachedView(object):
         return req.cache.get_cache(**kwargs)
 
 
-    def cached_action(self, func):
-        """Wrapper for a controller based action, i.e. a function with a self
-        parameter aka method."""
+# To make using the decorator feel more native.
+cached_view = CachedView
 
-        assert False
-
-    def cached_view(self, func):
-        """Wrapper for a view, i.e. a pure function."""
-
-        assert False
+__all__ = ('cached_view',)
