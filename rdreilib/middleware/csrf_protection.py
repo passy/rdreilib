@@ -8,7 +8,7 @@ attacks by setting cookies on every request and validate them on post
 requests.
 
 :copyright: 2009, Pascal Hartig <phartig@rdrei.net>
-:license: GPL v3, see doc/LICENSE for more details.
+:license: BSD, see doc/LICENSE for more details.
 """
 
 from hashlib import sha1
@@ -30,12 +30,15 @@ class CSRFProtectionMiddleware(object):
         app.connect_event('response-start', self.set_cookie)
 
     def set_cookie(self, response):
-        response.set_cookie(self.cookie_name, self._generate_token())
+        if not hasattr(response, 'no_csrf_cookie'):
+            response.set_cookie(self.cookie_name, self._generate_token())
 
     def _generate_token(self):
         """Generate a new random string based on time and secret set in the
         options."""
-        return sha1("%s#%s" % (time(), self.app.cfg['sessions/secret'])).hexdigest()
+        return sha1("%s#%s" % (time(),
+                               self.app.cfg['sessions/secret'])).hexdigest()
+
 
 def setup_csrf_protection(app, cookie_name='r3csrfprot'):
     """Sets up the csrf protection middleware.
@@ -44,3 +47,5 @@ def setup_csrf_protection(app, cookie_name='r3csrfprot'):
     """
 
     middleware = CSRFProtectionMiddleware(app, cookie_name)
+
+__all__ = ('setup_csrf_protection',)
