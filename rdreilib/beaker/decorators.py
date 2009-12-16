@@ -11,6 +11,8 @@ Provides some decorators for easier use.
 
 from functools import wraps
 from werkzeug.wrappers import Request
+from glashammer.utils.local import get_app
+
 import inspect
 
 
@@ -40,19 +42,30 @@ class CachedView(object):
         self.namespace = namespace
         self.cache_args = cache_args
         self.extra_kwargs = kwargs
+        self.app = get_app()
 
     def __call__(self, func):
         """The real decorator call."""
 
         @wraps(func)
-        def _inner(*args, **kwargs):
+        def _inner_cached(*args, **kwargs):
+            """Closure used if cached is enabled."""
             req = self.get_request(args)
             cache = self.get_cache(req)
             key = self.generate_key(func, args, kwargs)
 
             return cache.get(key, createfunc=lambda: func(*args, **kwargs))
 
-        return _inner
+        @wraps(func)
+        def _inner_uncached(*args, **kwargs):
+            """Closure used if cache is disabled. Does actually nothing, but
+            saves some overhead."""
+            return func(*args, **kwargs)
+
+        if self.app['cache/enabled']:
+            return _inner_cached
+        else:
+            return _inner_uncached
 
     def _get_argument_value(self, index, args, kwargs):
         """Returns the value on a list of arguments and keywords arguments on
