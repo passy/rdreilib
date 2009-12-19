@@ -36,15 +36,23 @@ class BaseController(object):
             if hasattr(subcls, 'endpoint'):
                 app.add_views_controller(subcls.endpoint, subcls())
 
-    def render(self, template, *args, **kwargs):
-        """Shortcut for render_to_response.
-        @param kwargs dict: May contain an element _path to override path
-        building."""
+    def _get_template_path(self, template, kwargs):
+        """Extracts possible template path hints from object endpoint
+        and kwargs."""
 
         if '_path' in kwargs:
             template = "%s/%s" % (kwargs.pop('_path'), template)
         else:
             template = "%s/%s" % (self.endpoint, template)
+
+        return template
+
+    def render(self, template, *args, **kwargs):
+        """Shortcut for render_to_response.
+        @param kwargs dict: May contain an element _path to override path
+        building."""
+
+        template = self._get_template_path(template, kwargs)
 
         kwargs.update(user=TemplateUser())
         kwargs.update(helpers=self.helpers)
