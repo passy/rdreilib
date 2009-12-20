@@ -70,7 +70,7 @@ class Request(GHRequest):
                 api_key = get_app().cfg['facebook/api_key']
                 secret_key = get_app().cfg['facebook/secret_key']
                 facebook = Facebook(api_key, secret_key)
-                # Settings the cookie values
+                # Setting the cookie values
                 # It's so cool to have no private attributes. (;
                 facebook.uid = self.session['fb_user_id']
                 facebook.session_key = self.session['fb_session_id']

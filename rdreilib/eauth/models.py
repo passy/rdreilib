@@ -128,7 +128,7 @@ class User(ModelBase):
                 filter(Permission.permission_id.in_(
                     session.query(group_permission_table.c.permission_id).\
                     select_from(
-                        orm.outerjoin(
+                        orm.join(
                             group_permission_table,
                             user_group_table,
                             and_(
