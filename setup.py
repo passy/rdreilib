@@ -32,7 +32,7 @@ else:
 
 setup(
     name='rdreilib',
-    version='0.1.2',
+    version='0.1.3',
     url='http://code.rdrei.net/rdreilib/',
     license='BSD',
     author='Pascal Hartig',
