@@ -35,10 +35,10 @@ class FacebookMiddleware(object):
     def __init__(self, api_key, secret_key):
         self.api_key = api_key
         self.secret_key = secret_key
-        self.group_id = None
+        self.group_name = None
 
-    def set_group_id(self, group_id):
-        self.group_id = group_id
+    def set_group_name(self, group_name):
+        self.group_name = group_name
 
     def check_cookie(self, req):
         """Check for a valid facebook cookie and set try to get
@@ -139,8 +139,8 @@ class FacebookMiddleware(object):
     def _set_user_group(self, user):
         """Set the user group using the group id specified."""
 
-        if self.group_id:
-            group = Group.query.get(self.group_id)
+        if self.group_name:
+            group = Group.query.filter_by(group_name=self.group_name).one()
             user.groups.append(group)
 
     def _login_or_create(self, req, username, _recursive=False):
@@ -234,14 +234,14 @@ class FacebookMiddleware(object):
 
         return hashlib.md5(signature).hexdigest()
 
-def setup_facebook_connect(app, fetch_profile=False, group_id=None):
+def setup_facebook_connect(app, fetch_profile=False, group_name=None):
     """
     Enables facebook connect support. If a user has the correct cookies
     regarding the api and secret keys you provided, the user will be
     registered ie. a User object will be created. If ``fetch_profile`` is
     enabled, a user profile is created, too.
 
-    :param group_id: Optional integer parameter. New facebook connect users
+    :param group_name: Optional group name. New facebook connect users
     will join this group.
     """
     app.add_config_var('facebook/api_key', str, '')
@@ -249,7 +249,7 @@ def setup_facebook_connect(app, fetch_profile=False, group_id=None):
 
     FM = FacebookMiddleware(app.cfg['facebook/api_key'],
                             app.cfg['facebook/secret_key'])
-    FM.set_group_id(group_id)
+    FM.set_group_name(group_name)
 
     app.connect_event('request-start', FM.check_cookie)
 

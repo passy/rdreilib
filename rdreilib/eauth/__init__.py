@@ -27,8 +27,6 @@ def authenticate(login, password):
     """If the given login (username or email) and password
     are valid, return a User object."""
 
-    #user = User.query.filter(or_(User.user_name==login,
-    #                             User.email==login))
     try:
         user = User.query.\
                 filter(User.user_name==login).\
@@ -144,8 +142,11 @@ def setup_eauth(app, auth_realm=None, session_based=True, cache_key=None):
                                         expire=app.cfg['cache/user_timeout'])
 
         if SESSION_KEY in req.session:
-            user = _get_user(req.session[SESSION_KEY], cache)
-            if user:
+            try:
+                user = _get_user(req.session[SESSION_KEY], cache)
+            except NoResultFound:
+                req.unset_user()
+            else:
                 req.set_user(user)
 
     if session_based:
