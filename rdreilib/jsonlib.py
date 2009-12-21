@@ -13,19 +13,33 @@ from glashammer.utils.json import JsonResponse
 from glashammer.utils.local import get_app
 from glashammer.bundles.i18n import _TranslationProxy
 from werkzeug.wrappers import Response
+from werkzeug.exceptions import HTTPException
 from simplejson import dumps as dump_json, JSONEncoder
 from functools import wraps
 import traceback, logging
 
 log = logging.getLogger("json")
 
-class JSONException(Exception):
-    pass
+class JSONException(HTTPException):
+    code = 500
+    description = "A server side error occured."
+
+    def get_headers(self, environ):
+        """Get a list of headers"""
+        return [('Content-Type', 'application/json')]
+
+    def get_body(self, environ):
+        """Get the body."""
+
+        return dump_json({'error': self.get_description(environ)})
+
+    def __repr__(self):
+        return self.description
 
 class LazyEncoder(JSONEncoder):
     """Provides a simple wrapper for lazy gettext strings that aren't
     json-able with the default encoder."""
-    
+
     def default(self, o):
         if isinstance(o, _TranslationProxy):
             return unicode(o)
@@ -53,13 +67,11 @@ def json_view(f, encoder=None):
     def _wrapped(*args, **kw):
         try:
             res = f(*args, **kw)
-        except Exception, err:
+        except HTTPException, err:
             log.error("View error: %s" % traceback.format_exc())
-            resp = JsonResponse({'error': repr(err)})
-            # Choosing 500 would be more meaningful, but makes it unparsable for
-            # jQuery. If debug mode is off, we return a 500 and be less verbose.
-            if not get_app().cfg['general/debug']:
-                resp.status_code = 500
+            resp = JsonResponse({'error': repr(err), 'description':
+                                 err.description})
+            resp.status_code = err.code
             return resp
         if callable(res):
             return res

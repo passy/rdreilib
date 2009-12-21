@@ -14,6 +14,7 @@ from glashammer.utils import get_app, Request
 from glashammer.bundles.i18n2 import _
 
 from jsonlib import JSONException
+from werkzeug.exceptions import Forbidden
 
 from functools import wraps
 from hashlib import sha1
@@ -76,13 +77,13 @@ def require_ajax_token_factory(reset):
 
 def require_csrf_token_factory(form_var='_csrf_token',
                                cookie_var='r3csrfprot',
-                               exception_type=JSONException):
+                               exception_type=Forbidden):
     """Create a new ``require_csrf_token`` decorator based on the options
     submitted."""
 
     def require_csrf_token(func):
-        """Raises a JSONException if posted '_csrf_token' does not match with
-        cookie value."""
+        """Raises a Forbidden by default if posted '_csrf_token' does
+        not match the cookie value."""
 
         @wraps(func)
         def decorator(self, req, *args, **kwargs):
@@ -93,7 +94,7 @@ def require_csrf_token_factory(form_var='_csrf_token',
                 raise exception_type("CSRF protection validation failed! "
                                      "Form data missing!")
 
-            elif req.form['_csrf_token'] != req.cookies['r3csrfprot']:
+            elif req.form[form_var] != req.cookies[cookie_var]:
                 raise exception_type("CSRF protection validation failed! "
                                      "Form data invalid!")
             else:
