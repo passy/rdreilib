@@ -12,6 +12,7 @@
 from glashammer.utils.json import JsonResponse
 from glashammer.utils.local import get_app
 from glashammer.bundles.i18n import _TranslationProxy
+from glashammer.utils.lazystring import _LazyString
 from werkzeug.wrappers import Response
 from werkzeug.exceptions import HTTPException
 from simplejson import dumps as dump_json, JSONEncoder
@@ -42,6 +43,8 @@ class LazyEncoder(JSONEncoder):
 
     def default(self, o):
         if isinstance(o, _TranslationProxy):
+            return unicode(o)
+        elif isinstance(o, _LazyString):
             return unicode(o)
         elif hasattr(o, '__json__'):
             return o.__json__()

@@ -62,7 +62,7 @@ class CachedView(object):
             saves some overhead."""
             return func(*args, **kwargs)
 
-        if self.app['cache/enabled']:
+        if self.app.cfg['cache/enabled']:
             return _inner_cached
         else:
             return _inner_uncached

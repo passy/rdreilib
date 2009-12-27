@@ -95,6 +95,8 @@ def require_csrf_token_factory(form_var='_csrf_token',
                                      "Form data missing!")
 
             elif req.form[form_var] != req.cookies[cookie_var]:
+                log.info("CSRF-Protection failed. Expected %s, got %s.",
+                         req.cookies[cookie_var], req.form[form_var]);
                 raise exception_type("CSRF protection validation failed! "
                                      "Form data invalid!")
             else:

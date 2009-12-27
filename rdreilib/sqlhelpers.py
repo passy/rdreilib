@@ -36,11 +36,11 @@ def parse_filter_string(str, model, allowed=None, mappings=None):
             continue
         if len(value) < 2:
             continue
-        
+
         # Check whether it's allowed.
         if allowed and key not in allowed:
             raise TypeError("Filtering by key %s is is disallowed." % key)
-        
+
         if not hasattr(model, key):
             raise TypeError("Filtering by this column is impossible. (;")
 
@@ -48,7 +48,7 @@ def parse_filter_string(str, model, allowed=None, mappings=None):
         _cmp = mappings and mappings.get(key, CMP_FALLBACK) or \
                 CMP_FALLBACK
         cmp = getattr(getattr(model, key), _cmp)
-        
+
         # Build the filter. We really need a non-unicode string here.
         args.append(cmp(value))
 
@@ -56,16 +56,16 @@ def parse_filter_string(str, model, allowed=None, mappings=None):
 
 def get_filter_values(filter_str):
     """Returns the values a filter is applied on."""
-    
+
     try:
         return [bit.split(":")[1] for bit in filter_str.split(",") if
                 bit.split(":")[1]]
     except IndexError:
-        # We could check ':' in ... but this would not get errors if 
+        # We could check ':' in ... but this would not get errors if
         # there is a value on one site only. Dunno if this affects
         # performance.
         return []
-        
+
 
 def parse_order(order_by, model, allowed = None, sort_key = None):
     """Returns a SQLAlchemy expression.
@@ -75,20 +75,20 @@ def parse_order(order_by, model, allowed = None, sort_key = None):
     @param sort_key {reference}: Is set to the order without leading -
     @raises BadRequest if sorting column is not in allowed.
     """
-    
+
     sort_key = (order_by[0] == '-') and order_by[1:] or order_by
     if allowed is not None and \
        sort_key not in allowed:
         raise BadRequest("Unsupported sorting column!")
-    
-    try:    
+
+    try:
         field = getattr(model, sort_key)
     except AttributeError:
         log.warn("Sorting by field %s requested that does not exist!", sort_key)
         return list()
-        
+
     if order_by[0] == '-':
         return field.desc()
     else:
         return field.asc()
-        
+

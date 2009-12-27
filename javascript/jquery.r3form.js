@@ -9,7 +9,7 @@
  * :license: BSD, see doc/LICENSE for more details.
  */
 
-/*global jQuery, window, R3 */
+/*global jQuery, window, MM */
 /*jslint white: true, onevar: true, browser: true, undef: true, nomen: true, eqeqeq: true, plusplus: true, bitwise: true, regexp: true, strict: true, newcap: true */
 "use strict";
 
@@ -57,6 +57,7 @@
             }
 
             if (settings.error_key in data) {
+                R3.log.debug("Found %o in data! Starting error handling.", settings.error_key);
                 is_error = true;
                 $.each(data[settings.error_key], function (key, value) {
                     var $error_list = $($.format(
@@ -67,7 +68,7 @@
                     // There can be multiple errors on each item.
                     $.each(value, function () {
                         // Append the actual error message
-                        $error_list.append($.format("<li>{0}</li>", this));
+                        $error_list.append($.format("<li>{0}</li>", this.toString()));
                     });
 
                     // Figure out where to attach.
@@ -95,6 +96,8 @@
                             $element.parent().before($error_list);
                         }
                     }
+
+                    $($.format(".{0}", settings.error_list_class)).fadeIn();
 
                 });
 

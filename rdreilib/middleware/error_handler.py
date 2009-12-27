@@ -11,6 +11,7 @@ Provides advanced error handling as glashammer middleware.
 
 from glashammer.utils import emit_event
 import logging
+import logging.handlers
 import traceback
 
 
@@ -136,3 +137,49 @@ def setup_error_handler(app):
     """
 
     ErrorHandler(app)
+
+def _setup_smtp_logging_handler(app):
+    """Creates the SMTPHandler and attaches it to the http_error logger."""
+
+    args = [app.cfg['email/smtp_host'],
+            app.cfg['email/from_addr'],
+            app.cfg['email/to_addr'],
+            app.cfg['email/subject']]
+
+    if app.cfg['email/smtp_username'] and app.cfg['email/smtp_password']:
+        args.append((app.cfg['email/smtp_username'],
+                     app.cfg['email/smtp_password']))
+
+    email_handler = logging.handlers.SMTPHandler(*args)
+    email_handler.setLevel(logging.WARN)
+
+    log = logging.getLogger('http_error')
+    log.addHandler(email_handler)
+
+
+def setup_error_mails(app):
+    """
+    Extends ``setup_error_handler`` by a configurable SMTPHandler sending
+    mails on error 500.
+
+    Adds new configuration variables:
+
+    * email/
+        * error_mails: Toggles sending mails.
+        * to_addr: E-Mail address to send error reports to.
+        * from_addr: Sender's address.
+        * subject: Mail subject. Optional.
+        * smtp_host: Defaults to localhost.
+        * smtp_username: None to disable SMTP credentials.
+        * smtp_password: None to disable SMTP credentials.
+    """
+
+    app.add_config_var("email/error_mails", bool, False)
+    app.add_config_var("email/to_addr", str, "admin@example.com")
+    app.add_config_var("email/from_addr", str, "admin@example.com")
+    app.add_config_var("email/subject", str, "rdreilib server fault!")
+    app.add_config_var("email/smtp_host", str, "localhost")
+    app.add_config_var("email/smtp_username", str, None)
+    app.add_config_var("email/smtp_password", str, None)
+
+    app.connect_event('app-setup', _setup_smtp_logging_handler)
