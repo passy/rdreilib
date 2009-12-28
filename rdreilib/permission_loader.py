@@ -80,7 +80,7 @@ class PermissionLoader(object):
                        self.permissions.keys())
         return Group.query.filter(Group.group_name.in_(group_names)).all()
 
-    def _get_permission_names(self):
+    def get_permission_names(self):
         """Gets a flat list/set of all permission names used in
         self.permissions."""
 
@@ -95,7 +95,7 @@ class PermissionLoader(object):
         """Get permissions already present in the database."""
 
         permission_names = (permission_name.decode('utf-8') for permission_name in
-                            self._get_permission_names())
+                            self.get_permission_names())
 
         return Permission.query.filter(
             Permission.permission_name.in_(permission_names)).all()
@@ -137,7 +137,7 @@ class PermissionLoader(object):
                                   self._get_existing_permissions())
         missing = []
 
-        for permission_name in self._get_permission_names():
+        for permission_name in self.get_permission_names():
             if permission_name not in self._permission_cache:
                 missing.append(permission_name)
 
