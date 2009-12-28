@@ -193,7 +193,7 @@ def list_api_methods():
     for rule in application.map.iter_rules():
         if rule.build_only:
             continue
-        view = application.find_view(rule.endpoint)
+        view = application.view_finder.find(rule.endpoint)
         if not getattr(view, 'is_api_method', False):
             continue
         handler = view.__name__
