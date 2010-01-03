@@ -10,6 +10,7 @@
 """
 
 import re, logging
+import unicodedata
 
 log = logging.getLogger("rdreilib.filters")
 
@@ -59,3 +60,11 @@ def highlight_legacy(value, hl, markup='<strong class="highlight">%s</strong>'):
 def intdisplay(value):
     """Simple method to display a float value as rounded integer."""
     return "%d" % round(value)
+
+def slugify(value):
+    """Normalizes strings, converts to lowercase, removes non-alpha characters
+    and converts spaces to hyphens."""
+
+    value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore')
+    value = unicode(re.sub('[^\w\s-]', '', value).strip().lower())
+    return re.sub('[-\s]+', '-', value)
