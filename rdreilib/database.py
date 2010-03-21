@@ -10,10 +10,9 @@
 """
 
 from p2lib import p2_to_int
-from glashammer.bundles.database import metadata, session, Query as _Query
-from glashammer.bundles.database import MetaModel, ModelBaseMeta
+from glashammer.bundles.sqlalchdb import metadata, session, Query as _Query
+from glashammer.bundles.sqlalchdb import MetaModel, ModelBaseMeta
 from sqlalchemy.ext.declarative import declarative_base
-from werkzeug.exceptions import NotFound
 from sqlalchemy import orm
 
 class Query(_Query):
@@ -32,4 +31,3 @@ class _ModelBase(MetaModel):
 
 ModelBase = declarative_base(metadata=metadata, cls=_ModelBase,
                              metaclass=ModelBaseMeta)
-

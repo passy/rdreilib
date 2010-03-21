@@ -9,14 +9,13 @@ SQLAlchemy models for eauth. Uses metadata from glashammer bundle.
 :license: BSD, see doc/LICENSE for more details.
 """
 
-
 import sqlalchemy as db
 
 from ..database import ModelBase, session
 from sqlalchemy import orm, and_
 from werkzeug.utils import cached_property
 from glashammer.utils.local import get_app
-from glashammer.bundles.database import metadata
+from glashammer.bundles.sqlalchdb import metadata
 
 from ..p2lib import int_to_p2
 
@@ -38,10 +37,12 @@ class User(ModelBase):
     is_active = db.Column(db.Boolean, default=True)
     is_superuser = db.Column(db.Boolean, default=False)
 
-    def __init__(self, user_name, password):
+    def __init__(self, user_name=None, password=None):
         """Creates a new user from scratch."""
-        self.user_name = user_name
-        self.password = password
+	if user_name:
+	    self.user_name = user_name
+	if password:
+	    self.password = password
 
     @property
     def user_p2id(self):

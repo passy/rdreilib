@@ -14,7 +14,7 @@ from eauth.models import AnonymousUser
 from glashammer.utils.wrappers import Request as GHRequest
 from glashammer.utils.wrappers import Response as GHResponse
 from glashammer.utils.local import get_app
-from glashammer.bundles.sessions import get_session
+from glashammer.bundles.sessions import get_session as get_bundle_session
 from werkzeug.utils import cached_property
 
 import logging
@@ -25,13 +25,18 @@ class Request(GHRequest):
 
     _user = None
     _cache = None
+    _session = None
 
-    @property
-    def session(self):
+    def get_session(self):
         if 'beaker.session' in self.environ:
             return self.environ['beaker.session']
         else:
-            return get_session()
+            return self._session
+
+    def set_session(self, session):
+	self._session = session
+
+    session = property(get_session, set_session)
 
     @property
     def cache(self):
