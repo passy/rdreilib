@@ -46,7 +46,7 @@ class SuperForm(Form):
         
         if len(_fieldsets) == 0:
             _fieldsets = (
-                (None, {'fields': [field[0] for field in self._fields]}),
+                (None, {'fields': self._fields}),
             )
             
         

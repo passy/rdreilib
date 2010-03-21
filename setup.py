@@ -42,10 +42,6 @@ setup(
     packages=['rdreilib', 'rdreilib.beaker', 'rdreilib.eauth',
               'rdreilib.middleware', 'rdreilib.templates'],
     platforms='any',
-    install_requires=[
-        'Werkzeug>0.5',
-        'Glashammer-rdrei',
-    ],
     package_dir={'rdreilib.templates': 'rdreilib/templates'},
     package_data={'rdreilib.templates': ['*.html', 'api/*.html']}
 )
