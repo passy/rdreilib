@@ -142,7 +142,7 @@ class User(ModelBase):
 
         return [value.permission_name for value in result]
 
-    permissions = cached_property(permissions, writeable=True)
+    permissions = cached_property(permissions)
 
     def has_perm_uncached(self, perm):
         "Returns True if the user has the specified permission."
